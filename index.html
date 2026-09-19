@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football League Manager - Dynasty</title>
+<style>
+  body {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #0d1117;
+    color: #c9d1d9;
+    margin: 0;
+    padding: 20px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  h1 {
+    color: #58a6ff;
+    border-bottom: 2px solid #30363d;
+    padding-bottom: 10px;
+  }
+  .controls {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+  }
+  button {
+    background-color: #238636;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button:hover {
+    background-color: #2ea043;
+  }
+  .screen {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 20px;
+    height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+  .text-green { color: #3fb950; }
+  .text-red { color: #f85149; }
+  .text-yellow { color: #d29922; }
+  .text-dim { color: #8b949e; }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  th, td {
+    border-bottom: 1px solid #30363d;
+    padding: 8px;
+    text-align: right;
+  }
+  th {
+    color: #8b949e;
+  }
+  td:nth-child(2), th:nth-child(2) {
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>FOOTBALL LEAGUE MANAGER 4.0</h1>
+  <div class="controls">
+    <button onclick="simulateMatchday()">Simulate Match</button>
+    <button onclick="viewTable()">View Table</button>
+    <button onclick="clearScreen()">Clear Screen</button>
+  </div>
+  <div id="console" class="screen">Welcome to Dynasty. Click 'Simulate Match' to begin.</div>
+</div>
+
+<script>
+  const TEAM_RATINGS = {
+      "McDonald's": 84,
+      "Drinks": 83,
+      "Minecraft": 82,
+      "Roblox": 81
+  };
+
+  const ROSTERS = {
+      "McDonald's": [
+          {name: "Apple Pie Ancelotti", pos: "CAM", rating: 89},
+          {name: "Ronald McDonald", pos: "RW", rating: 87},
+          {name: "Big Mac", pos: "CB", rating: 85},
+          {name: "Sundae Suarez", pos: "ST", rating: 84},
+          {name: "Quarter Pounder", pos: "GK", rating: 70}
+      ],
+      "Drinks": [
+          {name: "Kool-Aid Man", pos: "ST", rating: 88},
+          {name: "Pepsi Man", pos: "RW", rating: 87},
+          {name: "Coca-Cola Polar Bear", pos: "CB", rating: 85},
+          {name: "Santa Claus", pos: "GK", rating: 84}
+      ],
+      "Minecraft": [
+          {name: "Steve", pos: "CM", rating: 85},
+          {name: "Creeper", pos: "ST", rating: 83},
+          {name: "Enderman", pos: "CB", rating: 84},
+          {name: "Warden", pos: "GK", rating: 89}
+      ],
+      "Roblox": [
+          {name: "Builderman", pos: "CM", rating: 85},
+          {name: "Dominus Empyreus", pos: "ST", rating: 88},
+          {name: "Korblox Deathspeaker", pos: "CB", rating: 86},
+          {name: "Chef ROBLOX", pos: "GK", rating: 71}
+      ]
+  };
+
+  let W = {
+      table: {},
+      matchday: 0
+  };
+
+  Object.keys(TEAM_RATINGS).forEach(team => {
+      W.table[team] = { p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 };
+  });
+
+  const GOAL_TEMPLATES = [
+      "{scorer} finds the net! {team} lead the celebrations.",
+      "GOAL! {scorer} finishes it off clinically for {team}.",
+      "{scorer} smashes it home - the crowd erupts!",
+      "A moment of magic from {scorer} and it's in the back of the net.",
+      "{scorer} taps home from close range for {team}."
+  ];
+
+  function print(html) {
+      const screen = document.getElementById('console');
+      screen.innerHTML += html + "<br>";
+      screen.scrollTop = screen.scrollHeight;
+  }
+
+  function clearScreen() {
+      document.getElementById('console').innerHTML = "";
+  }
+
+  function poisson(lam) {
+      let L = Math.exp(-Math.max(0, lam));
+      let k = 0, p = 1.0;
+      while (p > L) {
+          k++;
+          p *= Math.random();
+      }
+      return Math.max(0, k - 1);
+  }
+
+  function getRandomPlayer(teamStr, posGroup) {
+      let roster = ROSTERS[teamStr];
+      let pool = roster;
+      if (posGroup) {
+          pool = roster.filter(p => p.pos.includes(posGroup));
+      }
+      if (pool.length === 0) pool = roster;
+      return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function simulateMatchday() {
+      let teams = Object.keys(TEAM_RATINGS);
+      let t1 = teams[Math.floor(Math.random() * teams.length)];
+      let t2 = teams[Math.floor(Math.random() * teams.length)];
+      while (t1 === t2) t2 = teams[Math.floor(Math.random() * teams.length)];
+
+      W.matchday++;
+      print(`<br>=== MATCHDAY ${W.matchday} ===`);
+
+      let r1 = TEAM_RATINGS[t1];
+      let r2 = TEAM_RATINGS[t2];
+      
+      let xg1 = 1.4 + (r1 - r2) / 30 + (Math.random() * 0.5 - 0.25);
+      let xg2 = 1.2 + (r2 - r1) / 30 + (Math.random() * 0.5 - 0.25);
+
+      let goals1 = Math.min(6, poisson(xg1));
+      let goals2 = Math.min(6, poisson(xg2));
+
+      print(`<strong>${t1} ${goals1} - ${goals2} ${t2}</strong>`);
+      print(`<span class="text-dim">----------------------------------------</span>`);
+
+      let events = [];
+      for(let i=0; i<goals1; i++) events.push({min: Math.floor(Math.random()*90)+1, team: t1, type: 'goal'});
+      for(let i=0; i<goals2; i++) events.push({min: Math.floor(Math.random()*90)+1, team: t2, type: 'goal'});
+      
+      if(Math.random() > 0.5) events.push({min: Math.floor(Math.random()*90)+1, team: t1, type: 'yellow'});
+      if(Math.random() > 0.8) events.push({min: Math.floor(Math.random()*90)+1, team: t2, type: 'red'});
+
+      events.sort((a,b) => a.min - b.min);
+
+      events.forEach(e => {
+          let p = getRandomPlayer(e.team, e.type === 'goal' ? 'ST' : null).name;
+          if (e.type === 'goal') {
+              let msg = GOAL_TEMPLATES[Math.floor(Math.random() * GOAL_TEMPLATES.length)]
+                          .replace("{scorer}", p)
+                          .replace("{team}", e.team);
+              print(`<span class="text-green"> ${e.min}' - ${msg}</span>`);
+          } else if (e.type === 'yellow') {
+              print(`<span class="text-yellow"> ${e.min}' - ${p} is shown a yellow card.</span>`);
+          } else if (e.type === 'red') {
+              print(`<span class="text-red"> ${e.min}' - RED CARD! ${p} is sent off!</span>`);
+          }
+      });
+
+      W.table[t1].p++; W.table[t2].p++;
+      W.table[t1].gf += goals1; W.table[t1].ga += goals2;
+      W.table[t2].gf += goals2; W.table[t2].ga += goals1;
+
+      if (goals1 > goals2) {
+          W.table[t1].w++; W.table[t1].pts += 3; W.table[t2].l++;
+      } else if (goals2 > goals1) {
+          W.table[t2].w++; W.table[t2].pts += 3; W.table[t1].l++;
+      } else {
+          W.table[t1].d++; W.table[t2].d++;
+          W.table[t1].pts += 1; W.table[t2].pts += 1;
+      }
+  }
+
+  function viewTable() {
+      print("<br><strong>=== LEAGUE TABLE ===</strong>");
+      let tableHtml = "<table><tr><th>#</th><th>TEAM</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>PTS</th></tr>";
+      
+      let sorted = Object.keys(W.table).sort((a, b) => {
+          if (W.table[b].pts !== W.table[a].pts) return W.table[b].pts - W.table[a].pts;
+          let gdA = W.table[a].gf - W.table[a].ga;
+          let gdB = W.table[b].gf - W.table[b].ga;
+          return gdB - gdA;
+      });
+
+      sorted.forEach((team, index) => {
+          let t = W.table[team];
+          let gd = t.gf - t.ga;
+          let rowClass = index === 0 ? 'text-green' : '';
+          tableHtml += `<tr class="${rowClass}">
+            <td>${index+1}</td>
+            <td>${team}</td>
+            <td>${t.p}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td>
+            <td>${t.gf}</td><td>${t.ga}</td><td>${gd}</td><td><strong>${t.pts}</strong></td>
+          </tr>`;
+      });
+      tableHtml += "</table>";
+      print(tableHtml);
+  }
+</script>
+</body>
+</html>
