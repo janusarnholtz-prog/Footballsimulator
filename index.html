@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crazy Football League Manager v2.0 - Ultimate Dynasty</title>
+  <style>
+    :root {
+      --bg-dark: #0b0d17;
+      --bg-card: #151828;
+      --bg-card-hover: #1e233b;
+      --primary: #ff0055;
+      --primary-glow: #ff005588;
+      --secondary: #00f0ff;
+      --accent: #ffe600;
+      --text: #ffffff;
+      --text-muted: #8b92b0;
+      --success: #00ff66;
+      --danger: #ff3344;
+      --border: #262c4a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; }
+    body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    header {
+      background: linear-gradient(90deg, #110022, #2b0044, #110022);
+      border-bottom: 3px solid var(--primary);
+      padding: 12px 24px; display: flex; justify-space: space-between; align-items: center;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .logo {
+      font-size: 22px; font-weight: 900; font-style: italic; letter-spacing: 1px;
+      background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase;
+    }
+
+    .club-status { display: flex; gap: 12px; font-size: 13px; font-weight: 600; }
+    .status-box { background: var(--bg-card); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; }
+    .status-val { color: var(--secondary); }
+
+    nav { background: var(--bg-card); display: flex; justify-content: center; gap: 6px; padding: 8px; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      background: transparent; border: none; color: var(--text-muted); padding: 8px 16px;
+      font-size: 13px; font-weight: 700; border-radius: 6px; cursor: pointer; text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: var(--text); background: var(--bg-card-hover); }
+    .tab-btn.active { color: #000; background: var(--secondary); box-shadow: 0 0 10px var(--secondary); }
+
+    main { flex: 1; padding: 20px; max-width: 1400px; margin: 0 auto; width: 100%; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    .card-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; text-transform: uppercase; color: var(--secondary); display: flex; justify-content: space-between; }
+
+    .btn {
+      background: linear-gradient(45deg, var(--primary), #d00040); color: #fff; border: none;
+      padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; text-transform: uppercase;
+      transition: all 0.2s; font-size: 12px;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 0 14px var(--primary-glow); }
+    .btn-secondary { background: linear-gradient(45deg, #00b4d8, #0077b6); }
+    .btn-success { background: linear-gradient(45deg, #00cc44, #008822); }
+    .btn-disabled { background: #444; cursor: not-allowed; transform: none; box-shadow: none; opacity: 0.5; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+    th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: rgba(0,0,0,0.4); color: var(--text-muted); text-transform: uppercase; font-size: 10px; }
+    tr:hover { background: var(--bg-card-hover); }
+
+    .pos-tag { font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 10px; text-align: center; display: inline-block; min-width: 32px; }
+    .pos-GK { background: #e6a100; color: #000; }
+    .pos-DEF { background: #0088ff; color: #fff; }
+    .pos-MID { background: #00cc66; color: #000; }
+    .pos-ATT { background: #ff2255; color: #fff; }
+
+    .stat-bar { height: 6px; background: #333; border-radius: 3px; overflow: hidden; width: 60px; display: inline-block; vertical-align: middle; }
+    .stat-fill { height: 100%; background: var(--success); }
+
+    #match-canvas { background: #1e5128; border: 3px solid #fff; border-radius: 8px; width: 100%; height: 280px; }
+    .scoreboard { display: flex; justify-content: space-around; align-items: center; background: #000; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 2px solid var(--primary); }
+    .team-score-val { font-size: 32px; font-weight: 900; color: var(--accent); }
+    .commentary-box { height: 120px; overflow-y: auto; background: #090b14; border: 1px solid var(--border); padding: 8px; border-radius: 6px; font-family: monospace; font-size: 11px; }
+
+    .club-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-top: 15px; }
+    .club-select-card { background: var(--bg-card); border: 2px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; cursor: pointer; }
+    .club-select-card:hover { border-color: var(--secondary); transform: scale(1.03); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div class="logo">Crazy Football Manager 2.0</div>
+    </div>
+    <div class="club-status">
+      <div class="status-box">CLUB: <span class="status-val" id="hdr-club">Select Club</span></div>
+      <div class="status-box">BUDGET: <span class="status-val" id="hdr-budget">$0.00M</span></div>
+      <div class="status-box">SEASON: <span class="status-val" id="hdr-season">1</span></div>
+      <div class="status-box">MATCHDAY: <span class="status-val" id="hdr-md">0/30</span></div>
+    </div>
+  </header>
+
+  <nav id="navbar" style="display:none;">
+    <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('squad')">Squad & Tactics</button>
+    <button class="tab-btn" onclick="switchTab('scouting')">Youth Scout</button>
+    <button class="tab-btn" onclick="switchTab('transfers')">Transfers</button>
+    <button class="tab-btn" onclick="switchTab('league')">Standings</button>
+    <button class="tab-btn" onclick="switchTab('match')">Play Match</button>
+  </nav>
+
+  <main>
+    <div id="tab-select-club">
+      <div class="card" style="text-align: center; max-width: 900px; margin: 30px auto;">
+        <h1 style="font-size: 28px; color: var(--secondary); margin-bottom: 8px;">CHOOSE YOUR FRANCHISE</h1>
+        <p style="color: var(--text-muted); font-size: 13px;">Select a club to begin your dynamic manager campaign!</p>
+        <div class="club-picker" id="club-picker-list"></div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="tab-dashboard" class="tab-content">
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Board Expectations</div>
+          <p style="font-size: 13px;"><strong>Objective:</strong> <span id="dash-objective" style="color:var(--accent);">Top 4 Finish</span></p>
+          <p style="font-size: 13px; margin-top: 8px;"><strong>Board Confidence:</strong> <span id="dash-confidence" style="color:var(--success);">85%</span></p>
+          <p style="font-size: 13px; margin-top: 8px;"><strong>Stadium Cap:</strong> <span id="dash-capacity">30,000</span></p>
+          <p style="font-size: 13px; margin-top: 8px;"><strong>Trophies Won:</strong> <span id="dash-trophies">0</span></p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Next Match</div>
+          <div style="text-align: center; padding: 10px 0;">
+            <div style="font-size: 18px; font-weight: 800;" id="next-opp-name">VS Opposition</div>
+            <div style="color: var(--text-muted); font-size: 12px; margin-top: 4px;" id="next-fixture-type">Matchday 1</div>
+            <button class="btn" style="margin-top: 12px;" onclick="switchTab('match')">Go To Pitch</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Finances & Rest</div>
+          <p style="font-size: 13px;"><strong>Transfer Budget:</strong> <span id="dash-tb">$0.00M</span></p>
+          <button class="btn btn-secondary" style="margin-top: 15px; width: 100%;" onclick="restSquad()">Rest Squad (+20 Stamina)</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 20px;">
+        <div class="card-title">Club News</div>
+        <div id="dash-news-feed" style="max-height: 160px; overflow-y: auto; font-size: 12px;"></div>
+      </div>
+    </div>
+
+    <!-- Squad -->
+    <div id="tab-squad" class="tab-content">
+      <div class="card">
+        <div class="card-title">
+          <span>First Team Roster</span>
+          <span style="font-size: 12px; color: var(--text-muted);" id="squad-count">Squad: 0/26</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Pos</th><th>Name</th><th>OVR</th><th>POT</th><th>Stamina</th><th>Morale</th><th>Age</th><th>Value</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="squad-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Scouting Engine -->
+    <div id="tab-scouting" class="tab-content">
+      <div class="card">
+        <div class="card-title">Youth Academy Scouting Network</div>
+        <p style="color:var(--text-muted); font-size:12px; margin-bottom:15px;">Send scouts abroad to discover high-potential wonderkids!</p>
+        <div class="grid-3">
+          <div class="card" style="background:#0c0f1d;">
+            <h3>South America Mission</h3>
+            <p style="font-size:11px; color:var(--text-muted); margin: 6px 0;">Cost: $5.00M | High Potential Attackers</p>
+            <button class="btn btn-success" onclick="scoutWonderkid('South America', 5.0)">Scout Region</button>
+          </div>
+          <div class="card" style="background:#0c0f1d;">
+            <h3>European Academy</h3>
+            <p style="font-size:11px; color:var(--text-muted); margin: 6px 0;">Cost: $7.50M | Balanced Tactical Players</p>
+            <button class="btn btn-success" onclick="scoutWonderkid('Europe', 7.5)">Scout Region</button>
+          </div>
+          <div class="card" style="background:#0c0f1d;">
+            <h3>Asian Scouting Hub</h3>
+            <p style="font-size:11px; color:var(--text-muted); margin: 6px 0;">Cost: $3.00M | High Pace / Stamina</p>
+            <button class="btn btn-success" onclick="scoutWonderkid('Asia', 3.0)">Scout Region</button>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <h4 style="color:var(--secondary); margin-bottom:10px;">Scouted Prospects</h4>
+          <div id="scout-prospects-list" class="grid-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transfers -->
+    <div id="tab-transfers" class="tab-content">
+      <div class="card">
+        <div class="card-title">Transfer Market</div>
+        <table>
+          <thead>
+            <tr><th>Pos</th><th>Name</th><th>Club</th><th>OVR</th><th>Age</th><th>Value</th><th>Action</th></tr>
+          </thead>
+          <tbody id="transfer-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Standings -->
+    <div id="tab-league" class="tab-content">
+      <div class="card">
+        <div class="card-title">League Table</div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>PTS</th></tr>
+          </thead>
+          <tbody id="league-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Match View -->
+    <div id="tab-match" class="tab-content">
+      <div class="grid-2">
+        <div>
+          <div class="scoreboard">
+            <div style="text-align:center;">
+              <div id="m-home-name" style="font-weight:bold;">HOME</div>
+              <div class="team-score-val" id="m-home-score">0</div>
+            </div>
+            <div id="m-time" style="font-size:20px; font-weight:bold; color:var(--secondary);">00'</div>
+            <div style="text-align:center;">
+              <div id="m-away-name" style="font-weight:bold;">AWAY</div>
+              <div class="team-score-val" id="m-away-score">0</div>
+            </div>
+          </div>
+
+          <canvas id="match-canvas" width="600" height="280"></canvas>
+
+          <div style="display: flex; gap: 10px; margin-top: 12px;">
+            <button class="btn btn-success" id="btn-start-match" onclick="startMatchSimulation()">Simulate Match</button>
+            <button class="btn btn-secondary" onclick="quickSimulateMatchday()">Quick Sim Day</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Live Commentary & In-Match Subs</div>
+          <div class="commentary-box" id="match-commentary"></div>
+
+          <div style="margin-top:15px;">
+            <label style="font-size:11px; color:var(--text-muted);">Tactical Mentality</label>
+            <select id="select-mentality" style="background:#090b14; color:#fff; border:1px solid var(--border); padding:6px; width:100%; border-radius:4px; margin-top:4px;">
+              <option value="Defensive">Defensive Counter</option>
+              <option value="Balanced" selected>Balanced Strategy</option>
+              <option value="Attacking">All-Out Attack</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const ROSTERS_DATA = {
+      "McDonald's": [["Apple Pie Ancelotti", "MID", 89, 29], ["Big Arch", "ATT", 86, 26], ["Big Mac", "DEF", 85, 28], ["Chicken Mayo", "ATT", 81, 22], ["Ronald McDonald", "ATT", 87, 31], ["Vanilla Milkshake", "GK", 72, 20]],
+      "Minecraft": [["Steve", "MID", 85, 26], ["Alex", "ATT", 82, 24], ["Enderman", "DEF", 84, 27], ["Warden", "GK", 89, 33], ["Herobrine", "MID", 90, 28]],
+      "Blue Lock": [["Yoichi Isagi", "ATT", 87, 19], ["Seishiro Nagi", "ATT", 88, 19], ["Rin Itoshi", "ATT", 89, 20], ["Gin Gagamaru", "GK", 81, 20]],
+      "Avengers": [["Iron Man", "MID", 82, 35], ["Captain America", "DEF", 81, 36], ["Thor", "ATT", 86, 34], ["Spider-Man", "ATT", 83, 20]]
+    };
+
+    let state = {
+      userTeam: null, season: 1, matchday: 0, teams: {}, players: {}, table: {}, fixtures: [], prospects: [], news: []
+    };
+
+    function initGame() {
+      const picker = document.getElementById('club-picker-list');
+      picker.innerHTML = '';
+      Object.keys(ROSTERS_DATA).forEach(tname => {
+        let squad = ROSTERS_DATA[tname];
+        let avgRating = Math.round(squad.reduce((acc, curr) => acc + curr[2], 0) / squad.length);
+        let card = document.createElement('div');
+        card.className = 'club-select-card';
+        card.innerHTML = `<div style="font-weight:bold;">${tname}</div><div style="color:var(--accent); font-size:18px; font-weight:bold; margin-top:4px;">${avgRating} OVR</div>`;
+        card.onclick = () => selectClub(tname);
+        picker.appendChild(card);
+      });
+    }
+
+    function selectClub(clubName) {
+      state.userTeam = clubName;
+      Object.keys(ROSTERS_DATA).forEach(tname => {
+        let roster = ROSTERS_DATA[tname];
+        state.players[tname] = roster.map(p => ({
+          id: Math.random().toString(36).substr(2, 9), name: p[0], pos: p[1], rating: p[2],
+          potential: p[2] + Math.floor(Math.random() * 8), age: p[3], stamina: 100, morale: 90,
+          value: Math.pow(p[2] / 50.0, 5) * 0.8, club: tname
+        }));
+        state.teams[tname] = { name: tname, budget: 45.0, stadiumCap: 30000, confidence: 85 };
+        state.table[tname] = { played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, pts: 0 };
+      });
+
+      generateFixtures();
+      document.getElementById('tab-select-club').style.display = 'none';
+      document.getElementById('navbar').style.display = 'flex';
+      switchTab('dashboard');
+      renderAll();
+      logNews(`Manager appointed at ${clubName}! Campaign underway.`);
+    }
+
+    function generateFixtures() {
+      let tKeys = Object.keys(state.teams);
+      state.fixtures = [];
+      for (let day = 0; day < 30; day++) {
+        let dayFixtures = [];
+        for (let i = 0; i < tKeys.length / 2; i++) {
+          let home = tKeys[(day + i) % tKeys.length];
+          let away = tKeys[(day + tKeys.length - 1 - i) % tKeys.length];
+          if (home !== away) dayFixtures.push({ home, away, played: false, hg: 0, ag: 0 });
+        }
+        state.fixtures.push(dayFixtures);
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      if (tabId === 'match') prepareMatchTab();
+    }
+
+    function renderAll() {
+      let uTeam = state.teams[state.userTeam];
+      document.getElementById('hdr-club').innerText = uTeam.name;
+      document.getElementById('hdr-budget').innerText = "$" + uTeam.budget.toFixed(2) + "M";
+      document.getElementById('hdr-season').innerText = state.season;
+      document.getElementById('hdr-md').innerText = state.matchday + "/30";
+      document.getElementById('dash-tb').innerText = "$" + uTeam.budget.toFixed(2) + "M";
+      document.getElementById('dash-confidence').innerText = uTeam.confidence + "%";
+
+      if (state.matchday < 30) {
+        let fix = state.fixtures[state.matchday].find(f => f.home === state.userTeam || f.away === state.userTeam);
+        let opp = fix.home === state.userTeam ? fix.away : fix.home;
+        document.getElementById('next-opp-name').innerText = "VS " + opp;
+      }
+
+      renderSquad();
+      renderStandings();
+      renderTransfers();
+      renderNews();
+    }
+
+    function renderSquad() {
+      let tbody = document.getElementById('squad-table-body');
+      tbody.innerHTML = '';
+      state.players[state.userTeam].forEach(p => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="pos-tag pos-${p.pos}">${p.pos}</span></td>
+          <td style="font-weight:bold;">${p.name}</td>
+          <td style="color:var(--accent); font-weight:bold;">${p.rating}</td>
+          <td>${p.potential}</td>
+          <td><div class="stat-bar"><div class="stat-fill" style="width:${p.stamina}%;"></div></div> ${p.stamina}%</td>
+          <td>${p.morale}%</td>
+          <td>${p.age}</td>
+          <td>$${p.value.toFixed(2)}M</td>
+          <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:9px;" onclick="sellPlayer('${p.id}')">Sell</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function scoutWonderkid(region, cost) {
+      let uTeam = state.teams[state.userTeam];
+      if (uTeam.budget < cost) { alert("Insufficient funds for scouting mission!"); return; }
+      uTeam.budget -= cost;
+
+      let newProspect = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: "Wonderkid " + Math.floor(Math.random() * 900 + 100),
+        pos: ["ATT", "MID", "DEF"][Math.floor(Math.random() * 3)],
+        rating: Math.floor(Math.random() * 10) + 72,
+        potential: Math.floor(Math.random() * 10) + 88,
+        age: 17, value: 6.0, club: "Free Agent"
+      };
+
+      state.prospects.push(newProspect);
+      logNews(`Scout returned from ${region} with prospect ${newProspect.name} (${newProspect.potential} POT)!`);
+      renderScoutProspects();
+      renderAll();
+    }
+
+    function renderScoutProspects() {
+      let container = document.getElementById('scout-prospects-list');
+      container.innerHTML = state.prospects.map(p => `
+        <div class="card" style="background:#0c0f1d; padding:10px;">
+          <div style="font-weight:bold;">${p.name} (${p.pos})</div>
+          <div style="font-size:11px; color:var(--accent);">POT: ${p.potential} | OVR: ${p.rating}</div>
+          <button class="btn btn-success" style="margin-top:8px; width:100%;" onclick="signProspect('${p.id}')">Sign Prospect</button>
+        </div>
+      `).join('');
+    }
+
+    function signProspect(id) {
+      let p = state.prospects.find(x => x.id === id);
+      p.club = state.userTeam;
+      p.stamina = 100; p.morale = 100;
+      state.players[state.userTeam].push(p);
+      state.prospects = state.prospects.filter(x => x.id !== id);
+      logNews(`Signed wonderkid ${p.name} to first team roster!`);
+      renderScoutProspects();
+      renderAll();
+    }
+
+    function restSquad() {
+      state.players[state.userTeam].forEach(p => { p.stamina = Math.min(100, p.stamina + 20); });
+      logNews("Squad took a recovery day (+20 Stamina).");
+      renderAll();
+    }
+
+    function renderStandings() {
+      let tbody = document.getElementById('league-table-body');
+      tbody.innerHTML = '';
+      let rows = Object.keys(state.table).map(tname => ({ name: tname, ...state.table[tname] }));
+      rows.sort((a,b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga));
+      rows.forEach((r, idx) => {
+        let tr = document.createElement('tr');
+        if (r.name === state.userTeam) tr.style.background = 'rgba(0,240,255,0.15)';
+        tr.innerHTML = `<td>${idx + 1}</td><td>${r.name}</td><td>${r.played}</td><td>${r.won}</td><td>${r.drawn}</td><td>${r.lost}</td><td>${r.gf}</td><td>${r.ga}</td><td>${r.pts}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderTransfers() {
+      let tbody = document.getElementById('transfer-table-body');
+      tbody.innerHTML = '';
+      Object.keys(state.players).forEach(tname => {
+        if (tname !== state.userTeam) {
+          state.players[tname].forEach(p => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td>${p.pos}</td><td>${p.name}</td><td>${p.club}</td><td>${p.rating}</td><td>${p.age}</td><td>$${p.value.toFixed(2)}M</td><td><button class="btn btn-success" style="padding:2px 6px; font-size:9px;" onclick="buyPlayer('${p.id}', '${p.club}')">Buy</button></td>`;
+            tbody.appendChild(tr);
+          });
+        }
+      });
+    }
+
+    function buyPlayer(id, fromClub) {
+      let p = state.players[fromClub].find(x => x.id === id);
+      let uTeam = state.teams[state.userTeam];
+      if (uTeam.budget < p.value) { alert("Not enough budget!"); return; }
+      uTeam.budget -= p.value;
+      state.players[fromClub] = state.players[fromClub].filter(x => x.id !== id);
+      p.club = state.userTeam; p.stamina = 100; p.morale = 95;
+      state.players[state.userTeam].push(p);
+      logNews(`BOUGHT ${p.name} from ${fromClub} for $${p.value.toFixed(2)}M!`);
+      renderAll();
+    }
+
+    function sellPlayer(id) {
+      let p = state.players[state.userTeam].find(x => x.id === id);
+      state.teams[state.userTeam].budget += p.value * 0.9;
+      state.players[state.userTeam] = state.players[state.userTeam].filter(x => x.id !== id);
+      logNews(`SOLD ${p.name} for $${(p.value * 0.9).toFixed(2)}M.`);
+      renderAll();
+    }
+
+    function prepareMatchTab() {
+      if (state.matchday >= 30) return;
+      let fix = state.fixtures[state.matchday].find(f => f.home === state.userTeam || f.away === state.userTeam);
+      document.getElementById('m-home-name').innerText = fix.home;
+      document.getElementById('m-away-name').innerText = fix.away;
+      document.getElementById('m-home-score').innerText = '0';
+      document.getElementById('m-away-score').innerText = '0';
+      document.getElementById('m-time').innerText = "00'";
+      document.getElementById('match-commentary').innerHTML = '';
+      drawCanvasPitch();
+    }
+
+    function drawCanvasPitch(ballX = 300, ballY = 140) {
+      const canvas = document.getElementById('match-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#1e5128'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+      ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+      ctx.beginPath(); ctx.moveTo(canvas.width / 2, 10); ctx.lineTo(canvas.width / 2, canvas.height - 10); ctx.stroke();
+      ctx.fillStyle = '#ffe600'; ctx.beginPath(); ctx.arc(ballX, ballY, 6, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function startMatchSimulation() {
+      if (state.matchday >= 30) return;
+      let fix = state.fixtures[state.matchday].find(f => f.home === state.userTeam || f.away === state.userTeam);
+      let hg = 0, ag = 0, minute = 0;
+      let comm = document.getElementById('match-commentary');
+
+      let timer = setInterval(() => {
+        minute += 5;
+        document.getElementById('m-time').innerText = minute + "'";
+        drawCanvasPitch(30 + Math.random() * 540, 20 + Math.random() * 240);
+
+        if (Math.random() < 0.2) {
+          if (Math.random() > 0.5) { hg++; document.getElementById('m-home-score').innerText = hg; comm.innerHTML = `<div>${minute}' GOAL for ${fix.home}!</div>` + comm.innerHTML; }
+          else { ag++; document.getElementById('m-away-score').innerText = ag; comm.innerHTML = `<div>${minute}' GOAL for ${fix.away}!</div>` + comm.innerHTML; }
+        }
+
+        if (minute >= 90) {
+          clearInterval(timer);
+          completeMatchday(fix, hg, ag);
+        }
+      }, 100);
+    }
+
+    function completeMatchday(userFix, hg, ag) {
+      userFix.hg = hg; userFix.ag = ag; userFix.played = true;
+      let hTab = state.table[userFix.home], aTab = state.table[userFix.away];
+      hTab.played++; aTab.played++; hTab.gf += hg; hTab.ga += ag; aTab.gf += ag; aTab.ga += hg;
+      if (hg > ag) { hTab.won++; hTab.pts += 3; aTab.lost++; }
+      else if (ag > hg) { aTab.won++; aTab.pts += 3; hTab.lost++; }
+      else { hTab.drawn++; aTab.drawn++; hTab.pts++; aTab.pts++; }
+
+      // Stamina Drain
+      state.players[state.userTeam].forEach(p => { p.stamina = Math.max(30, p.stamina - 12); });
+
+      state.matchday++;
+      logNews(`Matchday ${state.matchday} final: ${userFix.home} ${hg} - ${ag} ${userFix.away}`);
+      renderAll();
+    }
+
+    function quickSimulateMatchday() {
+      if (state.matchday >= 30) return;
+      let fix = state.fixtures[state.matchday].find(f => f.home === state.userTeam || f.away === state.userTeam);
+      completeMatchday(fix, Math.floor(Math.random() * 3), Math.floor(Math.random() * 3));
+      switchTab('league');
+    }
+
+    function logNews(msg) {
+      state.news.unshift(`[MD ${state.matchday}] ${msg}`);
+      renderNews();
+    }
+
+    function renderNews() {
+      document.getElementById('dash-news-feed').innerHTML = state.news.map(n => `<div style="padding:2px 0;">${n}</div>`).join('');
+    }
+
+    window.onload = () => initGame();
+  </script>
+</body>
+</html>
