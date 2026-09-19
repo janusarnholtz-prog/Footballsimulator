@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crazy Football League Manager - Dynasty Edition</title>
+  <style>
+    :root {
+      --bg-dark: #0f121d;
+      --bg-card: #181c2e;
+      --bg-card-hover: #22273f;
+      --primary: #ff0055;
+      --primary-glow: #ff0055aa;
+      --secondary: #00f0ff;
+      --accent: #ffe600;
+      --text: #ffffff;
+      --text-muted: #8b92b0;
+      --success: #00ff66;
+      --danger: #ff3344;
+      --border: #2a304d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* CrazyGames Header Banner */
+    header {
+      background: linear-gradient(90deg, #110022, #2b0044, #110022);
+      border-bottom: 3px solid var(--primary);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 1px;
+      background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
+    }
+
+    .badge-cg {
+      background: #7b2cbf;
+      color: #fff;
+      font-weight: bold;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 0 10px #7b2cbf;
+    }
+
+    .club-status {
+      display: flex;
+      gap: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .status-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-val {
+      color: var(--secondary);
+    }
+
+    /* Navigation Tabs */
+    nav {
+      background: var(--bg-card);
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: var(--bg-card-hover);
+    }
+
+    .tab-btn.active {
+      color: #000;
+      background: var(--secondary);
+      box-shadow: 0 0 12px var(--secondary);
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      color: var(--secondary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Buttons */
+    .btn {
+      background: linear-gradient(45deg, var(--primary), #d00040);
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 18px var(--primary-glow);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(45deg, #00b4d8, #0077b6);
+      box-shadow: 0 0 10px rgba(0, 180, 216, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(45deg, #00cc44, #008822);
+      box-shadow: 0 0 10px rgba(0, 204, 68, 0.4);
+    }
+
+    .btn-disabled {
+      background: #444;
+      cursor: not-allowed;
+      box-shadow: none !important;
+      transform: none !important;
+      opacity: 0.6;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: rgba(0,0,0,0.3);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    tr:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .pos-tag {
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      text-align: center;
+      display: inline-block;
+      min-width: 32px;
+    }
+
+    .pos-GK { background: #e6a100; color: #000; }
+    .pos-DEF, .pos-CB, .pos-LB, .pos-RB { background: #0088ff; color: #fff; }
+    .pos-MID, .pos-CDM, .pos-CM, .pos-CAM { background: #00cc66; color: #000; }
+    .pos-ATT, .pos-ST, .pos-LW, .pos-RW { background: #ff2255; color: #fff; }
+
+    /* Match View & Canvas */
+    #match-canvas {
+      background: #1e5128;
+      border: 3px solid #fff;
+      border-radius: 8px;
+      width: 100%;
+      height: 320px;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: #000;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 2px solid var(--primary);
+    }
+
+    .team-score {
+      text-align: center;
+    }
+
+    .team-score-name {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .team-score-val {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .match-time {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--secondary);
+    }
+
+    .commentary-box {
+      height: 140px;
+      overflow-y: auto;
+      background: #090b14;
+      border: 1px solid var(--border);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    .commentary-entry {
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed #222;
+    }
+
+    .event-goal { color: var(--success); font-weight: bold; }
+    .event-card { color: var(--accent); }
+    .event-red { color: var(--danger); font-weight: bold; }
+
+    /* Facilities Hub */
+    .facility-card {
+      background: #111526;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .facility-lvl {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    /* Modal / Popups */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 2px solid var(--primary);
+      width: 500px;
+      max-width: 90%;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 0 30px var(--primary-glow);
+    }
+
+    /* Select Club Screen */
+    .club-picker {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .club-select-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .club-select-card:hover {
+      border-color: var(--secondary);
+      transform: scale(1.04);
+      box-shadow: 0 0 15px var(--secondary);
+    }
+
+    .club-rating {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--accent);
+      margin-top: 6px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      header { flex-direction: column; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="logo">Crazy Football Manager</div>
+      <span class="badge-cg">CrazyGames Edition</span>
+    </div>
+    <div class="club-status">
+      <div class="status-box">CLUB: <span class="status-val" id="hdr-club">Select Club</span></div>
+      <div class="status-box">BUDGET: <span class="status-val" id="hdr-budget">$0.00M</span></div>
+      <div class="status-box">SEASON: <span class="status-val" id="hdr-season">1</span></div>
+      <div class="status-box">MATCHDAY: <span class="status-val" id="hdr-md">0/30</span></div>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav id="navbar" style="display:none;">
+    <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('squad')">Squad & Tactics</button>
+    <button class="tab-btn" onclick="switchTab('facilities')">Club Facilities</button>
+    <button class="tab-btn" onclick="switchTab('transfers')">Transfer Market</button>
+    <button class="tab-btn" onclick="switchTab('league')">League Table</button>
+    <button class="tab-btn" onclick="switchTab('cup')">Crazy Cup</button>
+    <button class="tab-btn" onclick="switchTab('match')">Play Match</button>
+  </nav>
+
+  <!-- Main Content Areas -->
+  <main>
+
+    <!-- Start / Club Select Screen -->
+    <div id="tab-select-club">
+      <div class="card" style="text-align: center; max-width: 900px; margin: 40px auto;">
+        <h1 style="font-size: 32px; color: var(--secondary); margin-bottom: 10px;">CHOOSE YOUR FRANCHISE</h1>
+        <p style="color: var(--text-muted);">Select a club to lead to glory in the Arcade Football League Dynasty!</p>
+        <div class="club-picker" id="club-picker-list"></div>
+      </div>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div id="tab-dashboard" class="tab-content">
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Manager Overview</div>
+          <p><strong>Manager:</strong> <span id="dash-mgr">User</span></p>
+          <p style="margin-top: 8px;"><strong>Stadium:</strong> <span id="dash-stadium">Arena</span></p>
+          <p style="margin-top: 8px;"><strong>Stadium Capacity:</strong> <span id="dash-capacity">30,000</span></p>
+          <p style="margin-top: 8px;"><strong>Reputation:</strong> <span id="dash-rep">75</span> / 100</p>
+          <p style="margin-top: 8px;"><strong>Trophies Won:</strong> <span id="dash-trophies">0</span></p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Next Fixture</div>
+          <div id="dash-next-fixture" style="text-align: center; padding: 20px 0;">
+            <div style="font-size: 20px; font-weight: 800;" id="next-opp-name">VS Opposition</div>
+            <div style="color: var(--text-muted); margin-top: 5px;" id="next-fixture-type">League Matchday 1</div>
+            <button class="btn" style="margin-top: 15px;" onclick="switchTab('match')">Go To Match</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Finance Summary</div>
+          <p><strong>Transfer Budget:</strong> <span id="dash-tb">$0.00M</span></p>
+          <p style="margin-top: 8px;"><strong>Wage Budget:</strong> <span id="dash-wb">$0.00M/yr</span></p>
+          <p style="margin-top: 8px;"><strong>Sponsor:</strong> <span id="dash-sponsor">None</span></p>
+          <p style="margin-top: 8px;"><strong>Est. Match Income:</strong> <span id="dash-match-inc">$0.00M</span></p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 20px;">
+        <div class="card-title">League News & Feed</div>
+        <div id="dash-news-feed" style="max-height: 200px; overflow-y: auto; font-size: 13px;"></div>
+      </div>
+    </div>
+
+    <!-- Squad Tab -->
+    <div id="tab-squad" class="tab-content">
+      <div class="card">
+        <div class="card-title">
+          <span>First Team Roster</span>
+          <span style="font-size: 13px; color: var(--text-muted);" id="squad-count">Squad: 0/26</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Pos</th>
+              <th>Name</th>
+              <th>OVR</th>
+              <th>POT</th>
+              <th>Age</th>
+              <th>Value</th>
+              <th>Wage</th>
+              <th>Goals</th>
+              <th>Assists</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="squad-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Facilities Tab -->
+    <div id="tab-facilities" class="tab-content">
+      <div class="card-title" style="margin-bottom: 20px;">Club Facilities & Infrastructure</div>
+      <div class="grid-3" id="facilities-grid"></div>
+    </div>
+
+    <!-- Transfer Market Tab -->
+    <div id="tab-transfers" class="tab-content">
+      <div class="card">
+        <div class="card-title">
+          <span>Global Transfer Market</span>
+          <input type="text" id="transfer-search" placeholder="Search player..." onkeyup="renderTransferMarket()" style="background:#090b14; border:1px solid var(--border); color:#fff; padding:6px 12px; border-radius:6px; font-size:12px;">
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Pos</th>
+              <th>Name</th>
+              <th>Club</th>
+              <th>OVR</th>
+              <th>Age</th>
+              <th>Market Value</th>
+              <th>Wage Req.</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="transfer-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- League Table Tab -->
+    <div id="tab-league" class="tab-content">
+      <div class="card">
+        <div class="card-title">League Standings</div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Club</th>
+              <th>P</th>
+              <th>W</th>
+              <th>D</th>
+              <th>L</th>
+              <th>GF</th>
+              <th>GA</th>
+              <th>GD</th>
+              <th>PTS</th>
+            </tr>
+          </thead>
+          <tbody id="league-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Cup Tab -->
+    <div id="tab-cup" class="tab-content">
+      <div class="card">
+        <div class="card-title">Crazy Knockout Cup</div>
+        <p style="color: var(--text-muted); margin-bottom: 15px;">Straight knockout tournament featuring all league teams!</p>
+        <div id="cup-bracket-container"></div>
+      </div>
+    </div>
+
+    <!-- Match Engine Tab -->
+    <div id="tab-match" class="tab-content">
+      <div class="grid-2">
+        <div>
+          <div class="scoreboard">
+            <div class="team-score">
+              <div class="team-score-name" id="m-home-name">HOME</div>
+              <div class="team-score-val" id="m-home-score">0</div>
+            </div>
+            <div class="match-time" id="m-time">00'</div>
+            <div class="team-score">
+              <div class="team-score-name" id="m-away-name">AWAY</div>
+              <div class="team-score-val" id="m-away-score">0</div>
+            </div>
+          </div>
+
+          <canvas id="match-canvas" width="600" height="320"></canvas>
+
+          <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="btn btn-success" id="btn-start-match" onclick="startMatchSimulation()">Simulate Match</button>
+            <button class="btn btn-secondary" onclick="quickSimulateMatchday()">Quick Sim Matchday</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Live Match Commentary</div>
+          <div class="commentary-box" id="match-commentary"></div>
+
+          <div class="card-title" style="margin-top: 20px;">Tactical Plan</div>
+          <div style="display: flex; gap: 10px;">
+            <select id="select-mentality" style="background:#090b14; color:#fff; border:1px solid var(--border); padding:8px; border-radius:6px; flex:1;">
+              <option value="Ultra-Defensive">Ultra-Defensive</option>
+              <option value="Defensive">Defensive</option>
+              <option value="Balanced" selected>Balanced</option>
+              <option value="Attacking">Attacking</option>
+              <option value="Ultra-Attacking">Ultra-Attacking</option>
+            </select>
+            <select id="select-formation" style="background:#090b14; color:#fff; border:1px solid var(--border); padding:8px; border-radius:6px; flex:1;">
+              <option value="4-3-3">4-3-3</option>
+              <option value="4-4-2">4-4-2</option>
+              <option value="4-2-3-1">4-2-3-1</option>
+              <option value="3-5-2">3-5-2</option>
+              <option value="5-3-2">5-3-2</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    /* ========================================================================
+       DATA STRUCTURES & INITIALIZATION
+       ======================================================================== */
+
+    const ROSTERS_DATA = {
+      "McDonald's": [
+        ["Apple Pie Ancelotti", "CAM", 89, 29], ["Big Arch", "ST", 86, 26], ["Big Mac", "CB", 85, 28],
+        ["Big Mac Brennan", "CM", 83, 25], ["Big Tasty", "ST", 82, 24], ["Chicken Mayo", "RW", 81, 22],
+        ["Double Hamburger", "CDM", 80, 27], ["Double Trouble Dani", "CAM", 80, 23], ["Fillet O'Fisher", "LB", 79, 21],
+        ["Hamburger", "CB", 78, 26], ["Happy Meal", "LW", 77, 19], ["Ronald McDonald", "RW", 87, 31],
+        ["Sundae Suarez", "ST", 84, 30], ["Vanilla Milkshake", "GK", 68, 20]
+      ],
+      "Drinks": [
+        ["Kool-Aid Man", "ST", 88, 27], ["Pepsi Man", "RW", 87, 26], ["Coca-Cola Polar Bear", "CB", 85, 30],
+        ["Santa Claus", "GK", 84, 36], ["Fido Dido", "CAM", 84, 24], ["Nesquik Bunny", "LW", 82, 21],
+        ["Red Bull Sun", "CM", 81, 25], ["Capri Sun Surfer", "RW", 80, 22], ["Bud Knight", "CB", 80, 29],
+        ["Monster Energy Guy", "ST", 80, 26], ["Gatorade Bolt Man", "GK", 72, 21]
+      ],
+      "Minecraft": [
+        ["Steve", "CM", 85, 26], ["Alex", "LW", 82, 24], ["Creeper", "ST", 83, 22],
+        ["Enderman", "CB", 84, 27], ["Ender Dragon", "ST", 88, 32], ["Wither", "CDM", 87, 31],
+        ["Iron Golem", "CB", 86, 29], ["Warden", "GK", 89, 33], ["Herobrine", "CAM", 90, 28]
+      ],
+      "Roblox": [
+        ["Builderman", "CM", 85, 34], ["Noob", "ST", 67, 18], ["David Baszucki", "CAM", 84, 35],
+        ["Telamon", "ST", 83, 32], ["Korblox Deathspeaker", "CB", 86, 30], ["The Overseer", "CAM", 87, 29],
+        ["Dominus Empyreus", "ST", 88, 28], ["Chef ROBLOX", "GK", 71, 25]
+      ],
+      "Squid Game": [
+        ["Seong Gi-hun", "ST", 83, 33], ["Kang Sae-byeok", "LW", 84, 23], ["Cho Sang-woo", "CAM", 85, 32],
+        ["Jang Deok-su", "ST", 81, 34], ["Hwang Jun-ho", "RB", 82, 27], ["In-ho", "CB", 86, 35],
+        ["Geum ja", "GK", 68, 26], ["Thanos", "ST", 80, 31]
+      ],
+      "Fortnite": [
+        ["Jonesy", "ST", 83, 26], ["Midas", "CAM", 87, 30], ["Meowscles", "ST", 85, 28],
+        ["The Foundation", "CB", 86, 32], ["Drift", "LW", 84, 24], ["Raven", "ST", 85, 29],
+        ["Omega", "CDM", 81, 28], ["Guff", "GK", 70, 20]
+      ],
+      "KFC": [
+        ["Bukajo Salat", "RW", 82, 23], ["Cris P. Strips", "ST", 80, 24], ["Drum N. Wingz", "ST", 81, 25],
+        ["Hot Wings", "RW", 82, 26], ["Kevin De Banana", "CAM", 84, 29], ["Lamine Caffeine", "LW", 85, 18],
+        ["Ricey Rodrigo", "RW", 83, 24], ["Thinicius Crustior", "LW", 86, 23], ["Virgil Van Dip", "CB", 87, 30]
+      ],
+      "Blue Lock": [
+        ["Yoichi Isagi", "ST", 87, 19], ["Meguru Bachira", "RW", 84, 19], ["Hyoma Chigiri", "LW", 83, 19],
+        ["Seishiro Nagi", "ST", 88, 19], ["Rin Itoshi", "ST", 89, 20], ["Shoei Barou", "ST", 87, 20],
+        ["Gin Gagamaru", "GK", 81, 20], ["Ryusei Shido", "ST", 88, 20]
+      ],
+      "Cobra Kai": [
+        ["Johnny Lawrence", "ST", 82, 36], ["Daniel LaRusso", "CM", 82, 36], ["Miguel Diaz", "CAM", 84, 19],
+        ["Robby Keene", "RW", 83, 19], ["Tory Nichols", "ST", 80, 19], ["Terry Silver", "CAM", 81, 38],
+        ["Chozen Toguchi", "CB", 84, 36], ["Mike Barnes", "ST", 83, 35]
+      ],
+      "Bjerre Herred": [
+        ["Laurits", "ST", 81, 24], ["Victor T", "CM", 80, 23], ["Victor J", "CB", 79, 25],
+        ["Vitus", "CB", 78, 22], ["Phillip", "GK", 77, 26], ["Asger", "CM", 77, 24]
+      ],
+      "Taco Bell": [
+        ["Alejandro Gelato", "CAM", 80, 25], ["Diego Costa Coffie", "ST", 79, 28], ["Federico Cheeseiesa", "LW", 81, 25],
+        ["Koko Taconaldo", "ST", 84, 29], ["Liandiet Pepsi", "ST", 82, 26], ["Vimto Van Djik", "CB", 83, 28]
+      ],
+      "Avengers": [
+        ["Iron Man", "CAM", 82, 35], ["Captain America", "CB", 81, 36], ["Thor", "ST", 86, 34],
+        ["The Hulk", "ST", 84, 33], ["Spider-Man", "RW", 83, 20], ["Doctor Strange", "CAM", 85, 34],
+        ["Black Panther", "CB", 82, 30], ["Captain Marvel", "ST", 87, 31], ["Scarlet Witch", "CAM", 88, 27]
+      ],
+      "Total Drama": [
+        ["Chris McLean", "CAM", 76, 35], ["Chef Hatchet", "CB", 78, 36], ["Duncan", "ST", 82, 21],
+        ["Heather", "CAM", 81, 20], ["Courtney", "CM", 80, 20], ["Alejandro", "ST", 83, 21]
+      ],
+      "Domino's": [
+        ["Cheese Pizza", "ST", 73, 22], ["Garlic Gattuso", "CB", 75, 25], ["Kevin De Ice", "GK", 76, 26],
+        ["Pizza Maldini", "CB", 79, 27], ["Rio Ngumoha", "LW", 77, 19]
+      ],
+      "Weak Hero": [
+        ["Yeon Si-eun", "CAM", 75, 18], ["Ahn Su-ho", "ST", 77, 18], ["Park Hu-min", "ST", 76, 19],
+        ["Na Baek-jin", "CAM", 78, 20]
+      ],
+      "Alice in Borderland": [
+        ["Ryohei Arisu", "ST", 86, 24], ["Yuzuha Usagi", "LW", 84, 23], ["Chishiya Shuntaro", "CAM", 87, 26],
+        ["Kuina Hikari", "CB", 85, 25], ["Mira Kano", "CAM", 82, 30], ["Aguni Morizono", "CB", 86, 32]
+      ]
+    };
+
+    let state = {
+      userTeam: null,
+      season: 1,
+      matchday: 0,
+      teams: {},
+      players: {},
+      table: {},
+      fixtures: [],
+      cup: { round: 0, teams: [], matches: [] },
+      facilities: {
+        training: { name: "Training Ground", level: 1, desc: "Increases player rating progression speed." },
+        academy: { name: "Youth Academy", level: 1, desc: "Generates higher potential youth regens." },
+        stadium: { name: "Stadium Expansion", level: 1, desc: "Increases matchday gate receipts & attendance." },
+        medical: { name: "Medical Center", level: 1, desc: "Reduces injury occurrence and recovery times." },
+        commercial: { name: "Commercial Hub", level: 1, desc: "Boosts sponsor and merchandise revenue." }
+      },
+      news: []
+    };
+
+    /* ========================================================================
+       HELPER FUNCTIONS
+       ======================================================================== */
+
+    function fmtMoney(val) {
+      return "$" + val.toFixed(2) + "M";
+    }
+
+    function calcValuation(rating, age) {
+      let base = Math.pow(rating / 55.0, 6.5) * 0.9;
+      let ageMult = age <= 21 ? 1.25 : (age <= 26 ? 1.1 : (age >= 31 ? 0.85 : 1.0));
+      return Math.max(0.2, base * ageMult);
+    }
+
+    function logNews(msg) {
+      state.news.unshift(`[MD ${state.matchday}] ${msg}`);
+      if (state.news.length > 30) state.news.pop();
+      renderNews();
+    }
+
+    /* ========================================================================
+       GAME INITIALIZATION
+       ======================================================================== */
+
+    function initGame() {
+      const picker = document.getElementById('club-picker-list');
+      picker.innerHTML = '';
+
+      Object.keys(ROSTERS_DATA).forEach(tname => {
+        let squad = ROSTERS_DATA[tname];
+        let avgRating = Math.round(squad.reduce((acc, curr) => acc + curr[2], 0) / squad.length);
+        
+        let card = document.createElement('div');
+        card.className = 'club-select-card';
+        card.innerHTML = `
+          <div style="font-weight:bold; font-size:16px;">${tname}</div>
+          <div class="club-rating">${avgRating} OVR</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${squad.length} Players</div>
+        `;
+        card.onclick = () => selectClub(tname);
+        picker.appendChild(card);
+      });
+    }
+
+    function selectClub(clubName) {
+      state.userTeam = clubName;
+
+      // Populate World State
+      Object.keys(ROSTERS_DATA).forEach(tname => {
+        let roster = ROSTERS_DATA[tname];
+        let squad = roster.map(p => {
+          let pot = Math.min(99, p[2] + Math.floor(Math.random() * 8));
+          return {
+            id: Math.random().toString(36).substr(2, 9),
+            name: p[0],
+            pos: p[1],
+            rating: p[2],
+            potential: pot,
+            age: p[3],
+            value: calcValuation(p[2], p[3]),
+            wage: parseFloat((p[2] / 100 * 0.08).toFixed(3)),
+            goals: 0,
+            assists: 0,
+            club: tname
+          };
+        });
+
+        state.players[tname] = squad;
+        state.teams[tname] = {
+          name: tname,
+          budget: 50.0 + (Math.random() * 20),
+          stadiumCap: 30000,
+          reputation: 75,
+          sponsor: "ByteWave Tech"
+        };
+
+        state.table[tname] = { played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, pts: 0 };
+      });
+
+      generateFixtures();
+      initCup();
+
+      document.getElementById('tab-select-club').style.display = 'none';
+      document.getElementById('navbar').style.display = 'flex';
+      
+      switchTab('dashboard');
+      updateHeader();
+      renderAll();
+      logNews(`Manager takes charge of ${clubName}! Pre-season underway.`);
+    }
+
+    function generateFixtures() {
+      let tKeys = Object.keys(state.teams);
+      let n = tKeys.length;
+      state.fixtures = [];
+
+      for (let day = 0; day < 30; day++) {
+        let dayFixtures = [];
+        for (let i = 0; i < n / 2; i++) {
+          let home = tKeys[(day + i) % n];
+          let away = tKeys[(day + n - 1 - i) % n];
+          if (home !== away) dayFixtures.push({ home, away, played: false, hg: 0, ag: 0 });
+        }
+        state.fixtures.push(dayFixtures);
+      }
+    }
+
+    function initCup() {
+      state.cup.round = 1;
+      let tKeys = [...Object.keys(state.teams)];
+      tKeys.sort(() => Math.random() - 0.5);
+      
+      state.cup.teams = tKeys;
+      state.cup.matches = [];
+      for (let i = 0; i < tKeys.length; i += 2) {
+        state.cup.matches.push({ home: tKeys[i], away: tKeys[i+1], winner: null, hg: 0, ag: 0 });
+      }
+    }
+
+    /* ========================================================================
+       UI RENDERERS & NAVIGATION
+       ======================================================================== */
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+      let target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.add('active');
+
+      const btns = document.querySelectorAll('.tab-btn');
+      btns.forEach(btn => {
+        if (btn.getAttribute('onclick').includes(tabId)) btn.classList.add('active');
+      });
+
+      if (tabId === 'match') prepareMatchTab();
+    }
+
+    function updateHeader() {
+      if (!state.userTeam) return;
+      let uTeam = state.teams[state.userTeam];
+      document.getElementById('hdr-club').innerText = uTeam.name;
+      document.getElementById('hdr-budget').innerText = fmtMoney(uTeam.budget);
+      document.getElementById('hdr-season').innerText = state.season;
+      document.getElementById('hdr-md').innerText = state.matchday + "/30";
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderSquad();
+      renderFacilities();
+      renderTransferMarket();
+      renderLeagueTable();
+      renderCup();
+      updateHeader();
+    }
+
+    function renderDashboard() {
+      let uTeam = state.teams[state.userTeam];
+      document.getElementById('dash-mgr').innerText = "Manager";
+      document.getElementById('dash-stadium').innerText = uTeam.name + " Arena";
+      document.getElementById('dash-capacity').innerText = uTeam.stadiumCap.toLocaleString();
+      document.getElementById('dash-rep').innerText = uTeam.reputation;
+      document.getElementById('dash-tb').innerText = fmtMoney(uTeam.budget);
+      document.getElementById('dash-wb').innerText = fmtMoney(uTeam.budget * 0.12) + "/yr";
+      document.getElementById('dash-sponsor').innerText = uTeam.sponsor;
+      document.getElementById('dash-match-inc').innerText = fmtMoney(uTeam.stadiumCap * 0.0003);
+
+      if (state.matchday < 30) {
+        let fix = state.fixtures[state.matchday].find(f => f.home === state.userTeam || f.away === state.userTeam);
+        let opp = fix.home === state.userTeam ? fix.away : fix.home;
+        document.getElementById('next-opp-name').innerText = "VS " + opp;
+        document.getElementById('next-fixture-type').innerText = `League Matchday ${state.matchday + 1}`;
+      } else {
+        document.getElementById('next-opp-name').innerText = "Season Complete";
+      }
+    }
+
+    function renderNews() {
+      const container = document.getElementById('dash-news-feed');
+      container.innerHTML = state.news.map(n => `<div style="padding:4px 0; border-bottom:1px solid #222;">${n}</div>`).join('');
+    }
+
+    function renderSquad() {
+      let tbody = document.getElementById('squad-table-body');
+      tbody.innerHTML = '';
+      let squad = state.players[state.userTeam];
+
+      document.getElementById('squad-count').innerText = `Squad: ${squad.length}/26`;
+
+      squad.forEach(p => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="pos-tag pos-${p.pos}">${p.pos}</span></td>
+          <td style="font-weight:bold;">${p.name}</td>
+          <td style="color:var(--accent); font-weight:bold;">${p.rating}</td>
+          <td style="color:var(--secondary);">${p.potential}</td>
+          <td>${p.age}</td>
+          <td>${fmtMoney(p.value)}</td>
+          <td>${fmtMoney(p.wage)}</td>
+          <td>${p.goals}</td>
+          <td>${p.assists}</td>
+          <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="sellPlayer('${p.id}')">Sell</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderFacilities() {
+      let grid = document.getElementById('facilities-grid');
+      grid.innerHTML = '';
+
+      Object.keys(state.facilities).forEach(key => {
+        let f = state.facilities[key];
+        let cost = f.level * 8.5;
+        let card = document.createElement('div');
+        card.className = 'facility-card';
+        card.innerHTML = `
+          <div>
+            <div style="font-weight:bold; font-size:16px;">${f.name}</div>
+            <div class="facility-lvl">Level ${f.level} / 5</div>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">${f.desc}</p>
+          </div>
+          <button class="btn ${f.level >= 5 ? 'btn-disabled' : ''}" style="margin-top:15px; width:100%; font-size:12px;" onclick="upgradeFacility('${key}')">
+            ${f.level >= 5 ? 'MAX LEVEL' : 'Upgrade (' + fmtMoney(cost) + ')'}
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function upgradeFacility(key) {
+      let f = state.facilities[key];
+      let cost = f.level * 8.5;
+      let uTeam = state.teams[state.userTeam];
+
+      if (f.level >= 5) return;
+      if (uTeam.budget < cost) {
+        alert("Insufficient transfer budget!");
+        return;
+      }
+
+      uTeam.budget -= cost;
+      f.level++;
+      if (key === 'stadium') uTeam.stadiumCap += 5000;
+
+      logNews(`Upgraded ${f.name} to Level ${f.level}!`);
+      renderAll();
+    }
+
+    function renderTransferMarket() {
+      let tbody = document.getElementById('transfer-table-body');
+      tbody.innerHTML = '';
+
+      let filter = document.getElementById('transfer-search').value.toLowerCase();
+      let allTargets = [];
+
+      Object.keys(state.players).forEach(tname => {
+        if (tname !== state.userTeam) {
+          state.players[tname].forEach(p => allTargets.push(p));
+        }
+      });
+
+      allTargets.filter(p => p.name.toLowerCase().includes(filter)).slice(0, 25).forEach(p => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="pos-tag pos-${p.pos}">${p.pos}</span></td>
+          <td style="font-weight:bold;">${p.name}</td>
+          <td>${p.club}</td>
+          <td style="color:var(--accent); font-weight:bold;">${p.rating}</td>
+          <td>${p.age}</td>
+          <td>${fmtMoney(p.value)}</td>
+          <td>${fmtMoney(p.wage)}</td>
+          <td><button class="btn btn-success" style="padding:4px 8px; font-size:10px;" onclick="buyPlayer('${p.id}', '${p.club}')">Buy Player</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function buyPlayer(pid, fromClub) {
+      let p = state.players[fromClub].find(x => x.id === pid);
+      let uTeam = state.teams[state.userTeam];
+
+      if (uTeam.budget < p.value) {
+        alert("Cannot afford player transfer fee!");
+        return;
+      }
+
+      uTeam.budget -= p.value;
+      state.teams[fromClub].budget += p.value;
+
+      state.players[fromClub] = state.players[fromClub].filter(x => x.id !== pid);
+      p.club = state.userTeam;
+      state.players[state.userTeam].push(p);
+
+      logNews(`SIGNED! ${p.name} joined ${state.userTeam} from ${fromClub} for ${fmtMoney(p.value)}.`);
+      renderAll();
+    }
+
+    function sellPlayer(pid) {
+      let squad = state.players[state.userTeam];
+      if (squad.length <= 11) {
+        alert("Cannot sell player! Squad size must stay above 11.");
+        return;
+      }
+
+      let p = squad.find(x => x.id === pid);
+      let fee = p.value * 0.9;
+      state.teams[state.userTeam].budget += fee;
+
+      state.players[state.userTeam] = squad.filter(x => x.id !== pid);
+
+      // assign to random AI team
+      let aiClubs = Object.keys(state.teams).filter(t => t !== state.userTeam);
+      let dest = aiClubs[Math.floor(Math.random() * aiClubs.length)];
+      p.club = dest;
+      state.players[dest].push(p);
+
+      logNews(`SOLD! ${p.name} departed ${state.userTeam} for ${fmtMoney(fee)}.`);
+      renderAll();
+    }
+
+    function renderLeagueTable() {
+      let tbody = document.getElementById('league-table-body');
+      tbody.innerHTML = '';
+
+      let rows = Object.keys(state.table).map(tname => {
+        let t = state.table[tname];
+        return { name: tname, ...t, gd: t.gf - t.ga };
+      });
+
+      rows.sort((a,b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
+
+      rows.forEach((r, idx) => {
+        let tr = document.createElement('tr');
+        if (r.name === state.userTeam) tr.style.background = 'rgba(0, 240, 255, 0.15)';
+        tr.innerHTML = `
+          <td><strong>${idx + 1}</strong></td>
+          <td style="font-weight:bold;">${r.name}</td>
+          <td>${r.played}</td>
+          <td>${r.won}</td>
+          <td>${r.drawn}</td>
+          <td>${r.lost}</td>
+          <td>${r.gf}</td>
+          <td>${r.ga}</td>
+          <td>${r.gd > 0 ? '+' + r.gd : r.gd}</td>
+          <td style="color:var(--accent); font-weight:bold;">${r.pts}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderCup() {
+      let container = document.getElementById('cup-bracket-container');
+      container.innerHTML = `<h3 style="color:var(--secondary); margin-bottom:10px;">Round ${state.cup.round} Fixtures</h3>`;
+
+      state.cup.matches.forEach(m => {
+        let div = document.createElement('div');
+        div.style.cssText = "background:#111526; border:1px solid var(--border); padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-between; align-items:center;";
+        div.innerHTML = `
+          <span><strong>${m.home}</strong> vs <strong>${m.away}</strong></span>
+          <span style="color:var(--accent); font-weight:bold;">${m.winner ? m.hg + ' - ' + m.ag + ' (' + m.winner + ' Won)' : 'Pending'}</span>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    /* ========================================================================
+       MATCH ENGINE & CANVAS VISUALS
+       ======================================================================== */
+
+    function prepareMatchTab() {
+      if (state.matchday >= 30) return;
+      let fix = state.fixtures[state.matchday].find(f => f.home === state.userTeam || f.away === state.userTeam);
+      document.getElementById('m-home-name').innerText = fix.home;
+      document.getElementById('m-away-name').innerText = fix.away;
+      document.getElementById('m-home-score').innerText = '0';
+      document.getElementById('m-away-score').innerText = '0';
+      document.getElementById('m-time').innerText = "00'";
+      document.getElementById('match-commentary').innerHTML = '';
+      drawCanvasPitch();
+    }
+
+    function drawCanvasPitch(ballX = 300, ballY = 160) {
+      const canvas = document.getElementById('match-canvas');
+      const ctx = canvas.getContext('2d');
+
+      // Grass
+      ctx.fillStyle = '#1e5128';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Pitch Lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+      // Center Line & Circle
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 20);
+      ctx.lineTo(canvas.width / 2, canvas.height - 20);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, 40, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Ball
+      ctx.fillStyle = '#ffe600';
+      ctx.beginPath();
+      ctx.arc(ballX, ballY, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function startMatchSimulation() {
+      if (state.matchday >= 30) {
+        alert("Season is complete!");
+        return;
+      }
+
+      const btn = document.getElementById('btn-start-match');
+      btn.disabled = true;
+      btn.classList.add('btn-disabled');
+
+      let fix = state.fixtures[state.matchday].find(f => f.home === state.userTeam || f.away === state.userTeam);
+      let homeSquad = state.players[fix.home];
+      let awaySquad = state.players[fix.away];
+
+      let homeAtk = homeSquad.reduce((acc, p) => acc + p.rating, 0) / homeSquad.length;
+      let awayAtk = awaySquad.reduce((acc, p) => acc + p.rating, 0) / awaySquad.length;
+
+      let hg = 0, ag = 0;
+      let minute = 0;
+
+      let commBox = document.getElementById('match-commentary');
+
+      let timer = setInterval(() => {
+        minute += 3;
+        document.getElementById('m-time').innerText = minute + "'";
+
+        // Ball animation
+        let bx = 50 + Math.random() * 500;
+        let by = 30 + Math.random() * 260;
+        drawCanvasPitch(bx, by);
+
+        // Chance logic
+        if (Math.random() < 0.18) {
+          if (Math.random() * (homeAtk + 10) > Math.random() * awayAtk) {
+            hg++;
+            document.getElementById('m-home-score').innerText = hg;
+            let scorer = homeSquad[Math.floor(Math.random() * homeSquad.length)];
+            scorer.goals++;
+            commBox.innerHTML = `<div class="commentary-entry event-goal">${minute}' GOAL for ${fix.home}! Scored by ${scorer.name}!</div>` + commBox.innerHTML;
+          } else {
+            ag++;
+            document.getElementById('m-away-score').innerText = ag;
+            let scorer = awaySquad[Math.floor(Math.random() * awaySquad.length)];
+            scorer.goals++;
+            commBox.innerHTML = `<div class="commentary-entry event-goal">${minute}' GOAL for ${fix.away}! Scored by ${scorer.name}!</div>` + commBox.innerHTML;
+          }
+        }
+
+        if (minute >= 90) {
+          clearInterval(timer);
+          btn.disabled = false;
+          btn.classList.remove('btn-disabled');
+
+          // Process rest of league matches
+          completeMatchday(fix, hg, ag);
+        }
+      }, 150);
+    }
+
+    function completeMatchday(userFix, userHg, userAg) {
+      state.fixtures[state.matchday].forEach(f => {
+        if (f === userFix) {
+          f.hg = userHg; f.ag = userAg; f.played = true;
+        } else {
+          f.hg = Math.floor(Math.random() * 4);
+          f.ag = Math.floor(Math.random() * 3);
+          f.played = true;
+        }
+
+        // Update Table
+        let hTab = state.table[f.home];
+        let aTab = state.table[f.away];
+
+        hTab.played++; aTab.played++;
+        hTab.gf += f.hg; hTab.ga += f.ag;
+        aTab.gf += f.ag; aTab.ga += f.hg;
+
+        if (f.hg > f.ag) { hTab.won++; hTab.pts += 3; aTab.lost++; }
+        else if (f.ag > f.hg) { aTab.won++; aTab.pts += 3; hTab.lost++; }
+        else { hTab.drawn++; aTab.drawn++; hTab.pts += 1; aTab.pts += 1; }
+      });
+
+      // Matchday Revenue
+      let uTeam = state.teams[state.userTeam];
+      let gateInc = uTeam.stadiumCap * 0.0003 * state.facilities.commercial.level;
+      uTeam.budget += gateInc;
+
+      state.matchday++;
+      logNews(`Matchday ${state.matchday} completed. Ticket sales generated ${fmtMoney(gateInc)}.`);
+
+      renderAll();
+    }
+
+    function quickSimulateMatchday() {
+      if (state.matchday >= 30) return;
+      let fix = state.fixtures[state.matchday].find(f => f.home === state.userTeam || f.away === state.userTeam);
+      completeMatchday(fix, Math.floor(Math.random() * 3), Math.floor(Math.random() * 3));
+      switchTab('league');
+    }
+
+    // Auto-run on load
+    window.onload = () => {
+      initGame();
+    };
+  </script>
+</body>
+</html>
