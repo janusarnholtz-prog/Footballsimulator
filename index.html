@@ -1,0 +1,710 @@
+#!/usr/bin/env python3
+"""
+FOOTBALL LEAGUE MANAGER - INTERACTIVE CAREER EDITION
+Includes:
+- 16 Official Clubs & Rosters from dataset[span_0](start_span)[span_0](end_span)
+- Lineup & Formation Manager (11 starters, max 26 squad)[span_1](start_span)[span_1](end_span)
+- Match & Season Simulation[span_2](start_span)[span_2](end_span)
+- Transfer Market (Buying, Selling & Automatic AI Transfer Bids)[span_3](start_span)[span_3](end_span)
+- Knockout Cup Schedule (Win to progress, Lose to exit)[span_4](start_span)[span_4](end_span)
+- Stats Leaderboards (Top Scorers & Assisters)[span_5](start_span)[span_5](end_span)
+"""
+
+import copy
+import math
+import random
+import sys
+
+# ============================================================================
+# CONFIGURATION & CONSTANTS
+# ============================================================================
+
+MAX_SQUAD_SIZE = 26[span_6](start_span)[span_6](end_span)
+MATCHDAYS_PER_SEASON = 30[span_7](start_span)[span_7](end_span)
+
+FORMATION_SPECS = {
+    "4-3-3": (4, 3, 3),
+    "4-4-2": (4, 4, 2),
+    "4-2-3-1": (4, 5, 1),
+    "3-5-2": (3, 5, 2),
+    "5-3-2": (5, 3, 2),
+    "3-4-3": (3, 4, 3),
+}[span_8](start_span)[span_8](end_span)
+
+NATIONALITIES = [
+    "England", "Spain", "Germany", "France", "Italy", "Portugal", "Brazil",
+    "Argentina", "Netherlands", "Belgium", "Japan", "USA", "Denmark", "Wales"
+][span_9](start_span)[span_9](end_span)
+
+TEAM_RATINGS = {
+    "McDonald's": 84, "Drinks": 83, "Minecraft": 82, "Roblox": 81,
+    "Squid Game": 80, "Fortnite": 79, "KFC": 78, "Blue Lock": 77,
+    "Cobra Kai": 76, "Bjerre Herred": 74, "Taco Bell": 73, "Avengers": 72,
+    "Total Drama": 71, "Domino's": 70, "Weak Hero": 68, "Alice in Borderland": 67
+}[span_10](start_span)[span_10](end_span)
+
+ROSTERS = {
+    "McDonald's": [
+        ("Apple Pie Ancelotti", "CAM", 89, 29), ("Big Arch", "ST", 86, 26),
+        ("Big Mac", "CB", 85, 28), ("Big Mac Brennan", "CM", 83, 25),
+        ("Big Tasty", "ST", 82, 24), ("Chicken Mayo", "RW", 81, 22),
+        ("Double Hamburger", "CDM", 80, 27), ("Double Trouble Dani", "CAM", 80, 23),
+        ("Fillet O'Fisher", "LB", 79, 21), ("Hamburger", "CB", 78, 26),
+        ("Happy Meal", "LW", 77, 19), ("Happy Mealo", "CM", 76, 20),
+        ("Hash Brown Bruni", "RB", 76, 22), ("McChicken", "ST", 75, 21),
+        ("McFlurry Marko", "CM", 74, 23), ("McNugget Nkosi", "CB", 73, 20),
+        ("Nugget", "CDM", 72, 19), ("Pepsinha", "LW", 71, 18),
+        ("Quarter Pounder", "GK", 70, 28), ("Quarter Pounder Quinto", "CB", 69, 22),
+        ("Ronald McDonald", "RW", 87, 31), ("Shake Shakira", "CAM", 78, 24),
+        ("Sundae Suarez", "ST", 84, 30), ("Vanilla Milkshake", "GK", 68, 20),
+        ("Wrap Wronski", "RB", 73, 21),
+    ],
+    "Drinks": [
+        ("Kool-Aid Man", "ST", 88, 27), ("Pepsi Man", "RW", 87, 26),
+        ("Coca-Cola Polar Bear", "CB", 85, 30), ("Santa Claus", "GK", 84, 36),
+        ("Fido Dido", "CAM", 84, 24), ("Nesquik Bunny", "LW", 82, 21),
+        ("Red Bull Sun", "CM", 81, 25), ("Capri Sun Surfer", "RW", 80, 22),
+        ("Bud Knight", "CB", 80, 29), ("The Most Interesting Man", "CAM", 79, 35),
+        ("Sunny D Sun", "LW", 78, 20), ("Tang Orangutan", "ST", 77, 23),
+        ("Chester Cheetah", "RW", 76, 24), ("Monster Energy Guy", "ST", 80, 26),
+        ("Schweppes Leopard", "RB", 75, 25), ("Orangina Bear", "CB", 74, 22),
+        ("Milo Champion Boy", "CM", 73, 19), ("Gatorade Bolt Man", "GK", 72, 21),
+        ("Dr Pepper Cowboy", "LB", 71, 27),
+    ],
+    "Minecraft": [
+        ("Steve", "CM", 85, 26), ("Alex", "LW", 82, 24),
+        ("Creeper", "ST", 83, 22), ("Enderman", "CB", 84, 27),
+        ("Zombie", "CB", 75, 25), ("Skeleton", "RW", 78, 24),
+        ("Ender Dragon", "ST", 88, 32), ("Wither", "CDM", 87, 31),
+        ("Villager", "CM", 72, 30), ("Iron Golem", "CB", 86, 29),
+        ("Piglin", "RM", 78, 23), ("Warden", "GK", 89, 33),
+        ("Herobrine", "CAM", 90, 28), ("Wolf", "RW", 76, 20),
+        ("Cat", "LW", 69, 19), ("Glow Squid", "CM", 67, 18),
+        ("Allay", "CAM", 74, 19), ("Sniffer", "CB", 68, 21),
+        ("Armadillo", "RB", 66, 18),
+    ],
+    "Roblox": [
+        ("Builderman", "CM", 85, 34), ("Noob", "ST", 67, 18),
+        ("Guest", "CB", 69, 19), ("Bacon Hair Male", "RW", 74, 21),
+        ("Bacon Hair Female", "LW", 75, 21), ("David Baszucki", "CAM", 84, 35),
+        ("Telamon", "ST", 83, 32), ("Erik Cassel", "CM", 81, 33),
+        ("Mr. Bling Bling", "RW", 79, 25), ("Roblox Boy", "ST", 76, 20),
+        ("Roblox Girl", "LW", 77, 20), ("Korblox Deathspeaker", "CB", 86, 30),
+        ("The Overseer", "CAM", 87, 29), ("Redcliff Knight", "CB", 82, 27),
+        ("Dominus Empyreus", "ST", 88, 28), ("Classic Police Officer", "RB", 73, 26),
+        ("The Witch Doctor", "CDM", 80, 28), ("Chef ROBLOX", "GK", 71, 25),
+        ("Rthro Man", "LB", 72, 22),
+    ],
+    "Squid Game": [
+        ("Seong Gi-hun", "ST", 83, 33), ("Kang Sae-byeok", "LW", 84, 23),
+        ("Cho Sang-woo", "CAM", 85, 32), ("Oh Il-nam", "CM", 74, 37),
+        ("Abdul Ali", "CM", 78, 28), ("Jang Deok-su", "ST", 81, 34),
+        ("min su", "CM", 70, 22), ("Hwang Jun-ho", "RB", 82, 27),
+        ("In-ho", "CB", 86, 35), ("The Salesman", "RW", 73, 31),
+        ("Ji-yeong", "LW", 72, 21), ("dae-oh", "CB", 69, 24),
+        ("Geum ja", "GK", 68, 26), ("jung bae", "CM", 74, 29),
+        ("Myung gi", "CAM", 79, 25), ("nam gyu", "ST", 71, 23),
+        ("Cheol", "LB", 67, 20), ("Thanos", "ST", 80, 31),
+        ("Yong sik", "CDM", 75, 27),
+    ],
+    "Fortnite": [
+        ("Jonesy", "ST", 83, 26), ("Peely", "ST", 78, 20),
+        ("Ramirez", "LB", 81, 25), ("Midas", "CAM", 87, 30),
+        ("Cuddle Team Leader", "LW", 80, 22), ("Meowscles", "ST", 85, 28),
+        ("Brite Bomber", "RW", 79, 23), ("The Foundation", "CB", 86, 32),
+        ("The Scientist", "CM", 82, 31), ("The Visitor", "CB", 80, 29),
+        ("Drift", "LW", 84, 24), ("Raven", "ST", 85, 29),
+        ("Fishstick", "RW", 72, 21), ("Raptor", "RW", 77, 26),
+        ("Rust Lord", "CB", 73, 24), ("Omega", "CDM", 81, 28),
+        ("Skull Trooper", "LB", 75, 25), ("Guff", "GK", 70, 20),
+        ("Bushranger", "RB", 68, 19),
+    ],
+    "KFC": [
+        ("Beans McBreen", "CM", 77, 24), ("Boneless Bonita", "LW", 75, 22),
+        ("Bukajo Salat", "RW", 82, 23), ("Chilli Heatwave", "ST", 74, 21),
+        ("Chilly Billy", "CM", 72, 20), ("Cole Cokemar", "CB", 76, 25),
+        ("Corny Cob-eira", "CDM", 78, 26), ("Cris P. Strips", "ST", 80, 24),
+        ("Crosta Crunch", "RB", 73, 22), ("Drum N. Wingz", "ST", 81, 25),
+        ("Fred Chicken", "GK", 70, 23), ("Gravy Sauce", "CDM", 71, 21),
+        ("Hot Wings", "RW", 82, 26), ("Kevin De Banana", "CAM", 84, 29),
+        ("Lamine Caffeine", "LW", 85, 18), ("Macchiato", "CM", 75, 22),
+        ("Maccie McNuggets", "LB", 69, 20), ("Nugget Neves", "CM", 81, 26),
+        ("Pancakes", "GK", 68, 19), ("Ricey Rodrigo", "RW", 83, 24),
+        ("Ryan Jerki", "CB", 76, 25), ("Sergio Ramen", "CAM", 82, 28),
+        ("Thinicius Crustior", "LW", 86, 23), ("Toni Toast", "RB", 77, 29),
+        ("Twister Torino", "ST", 76, 24), ("Virgil Van Dip", "CB", 87, 30),
+        ("Zing R. Fillet", "LB", 74, 22),
+    ],
+    "Blue Lock": [
+        ("Yoichi Isagi", "ST", 87, 19), ("Meguru Bachira", "RW", 84, 19),
+        ("Rensuke Kunigami", "ST", 80, 19), ("Hyoma Chigiri", "LW", 83, 19),
+        ("Seishiro Nagi", "ST", 88, 19), ("Reo Mikage", "CM", 82, 19),
+        ("Rin Itoshi", "ST", 89, 20), ("Zantetsu", "RW", 75, 19),
+        ("Aryu", "CB", 78, 20), ("Ikki Niko", "CDM", 76, 18),
+        ("Shoei Barou", "ST", 87, 20), ("Gin Gagamaru", "GK", 81, 20),
+        ("Jingo Raichi", "CDM", 73, 19), ("Gurimu Igarashi", "ST", 64, 19),
+        ("Ryusei Shido", "ST", 88, 20), ("Tabito Karasu", "CM", 80, 20),
+        ("Eita Otoya", "RW", 78, 20), ("Kenyu Yukimiya", "LW", 79, 20),
+        ("Hiori", "CAM", 79, 19),
+    ],
+    "Cobra Kai": [
+        ("Johnny Lawrence", "ST", 82, 36), ("Daniel LaRusso", "CM", 82, 36),
+        ("Miguel Diaz", "CAM", 84, 19), ("Robby Keene", "RW", 83, 19),
+        ("Samantha LaRusso", "LW", 77, 19), ("Tory Nichols", "ST", 80, 19),
+        ("John Kreese", "CB", 78, 38), ("Terry Silver", "CAM", 81, 38),
+        ("Eli Hawk Moskowitz", "RW", 79, 19), ("Demetri Alexopoulos", "CM", 70, 19),
+        ("Chozen Toguchi", "CB", 84, 36), ("Mike Barnes", "ST", 83, 35),
+        ("Aisha Robinson", "LB", 71, 19), ("Kenny Payne", "LW", 74, 17),
+        ("Anthony LaRusso", "CM", 66, 17), ("Carmen Diaz", "GK", 69, 34),
+        ("Amanda LaRusso", "CM", 68, 34), ("Stingray", "CB", 63, 32),
+        ("Kyler Park", "RB", 72, 19),
+    ],
+    "Bjerre Herred": [
+        ("Laurits", "ST", 81, 24), ("Victor T", "CM", 80, 23),
+        ("Victor J", "CB", 79, 25), ("Vitus", "CB", 78, 22),
+        ("Phillip", "GK", 77, 26), ("Asger", "CM", 77, 24),
+        ("Qasim", "RW", 76, 23), ("Mikkel", "LW", 75, 22),
+        ("noah", "CM", 75, 21), ("Aleksander N", "CB", 74, 23),
+        ("Oliver", "RB", 73, 22), ("Mukhammad", "CM", 72, 21),
+        ("Hjalthe", "LB", 71, 20), ("Simonas", "LB", 70, 22),
+        ("Sebastian", "LB", 69, 21), ("Oliver W", "LB", 68, 20),
+        ("Aleksander B", "LB", 67, 19), ("Jakob", "ST", 66, 21),
+        ("Ruben", "ST", 65, 19),
+    ],
+    "Taco Bell": [
+        ("Alejandro Gelato", "CAM", 80, 25), ("Alessandro Nestle", "CM", 75, 23),
+        ("Andrea Paella", "LW", 72, 21), ("BM Packs", "CB", 69, 20),
+        ("Burgerinho", "ST", 77, 24), ("Capri-Sorba Thomas", "RW", 74, 22),
+        ("David de Gello", "GK", 78, 27), ("Diego Costa Coffie", "ST", 79, 28),
+        ("Dom Brownies", "CM", 67, 19), ("Elizer Marshmellow", "LB", 66, 19),
+        ("FRIEBURG", "CB", 72, 22), ("Federico Cheeseiesa", "LW", 81, 25),
+        ("Jay-Jaffa Cake", "CM", 69, 20), ("Joao Caramel", "RW", 75, 23),
+        ("Keiran Crunchwrap-Supreme", "CDM", 71, 21), ("Koko Taconaldo", "ST", 84, 29),
+        ("Lasagninho", "CAM", 76, 24), ("Leny Euro", "RB", 65, 18),
+        ("Liandiet Pepsi", "ST", 82, 26), ("Mr Whippy", "GK", 63, 18),
+        ("Nachos Fernandez", "CM", 74, 25), ("Rico Noodlz", "LB", 67, 20),
+        ("Scott Mchaggis", "CB", 71, 22), ("Vimto Van Djik", "CB", 83, 28),
+    ],
+    "Avengers": [
+        ("Iron Man", "CAM", 82, 35), ("Captain America", "CB", 81, 36),
+        ("Thor", "ST", 86, 34), ("The Hulk", "ST", 84, 33),
+        ("Black Widow", "LW", 77, 31), ("Hawkeye", "RW", 75, 32),
+        ("Spider-Man", "RW", 83, 20), ("Doctor Strange", "CAM", 85, 34),
+        ("Black Panther", "CB", 82, 30), ("Captain Marvel", "ST", 87, 31),
+        ("Scarlet Witch", "CAM", 88, 27), ("Vision", "CM", 81, 26),
+        ("Falcon", "RW", 73, 28), ("Winter Soldier", "LB", 78, 32),
+        ("Ant-Man", "ST", 70, 33), ("Wasp", "LW", 75, 29),
+        ("War Machine", "CDM", 76, 33), ("Nick Fury", "CB", 68, 37),
+        ("Thanos", "ST", 90, 38),
+    ],
+    "Total Drama": [
+        ("Chris McLean", "CAM", 76, 35), ("Chef Hatchet", "CB", 78, 36),
+        ("Owen", "ST", 75, 20), ("Gwen", "LW", 79, 20),
+        ("Duncan", "ST", 82, 21), ("Heather", "CAM", 81, 20),
+        ("Courtney", "CM", 80, 20), ("Alejandro", "ST", 83, 21),
+        ("Lindsay", "RW", 70, 19), ("Leshawna", "ST", 76, 20),
+        ("Izzy", "LW", 74, 20), ("Noah", "CAM", 77, 20),
+        ("Cody", "RW", 69, 19), ("Scott", "CM", 73, 21),
+        ("DJ", "CB", 72, 20), ("Harold", "CM", 71, 20),
+        ("Lightning", "ST", 80, 21), ("Geoff", "RW", 70, 20),
+        ("Justin", "RW", 74, 21),
+    ],
+    "Domino's": [
+        ("Cheese Pizza", "ST", 73, 22), ("Chocolate Brownie Jr", "ST", 64, 18),
+        ("Chocolate Yazoo", "CM", 66, 19), ("Dough Dalgaard", "CB", 71, 21),
+        ("Evan Burger", "RW", 69, 20), ("Garlic Gattuso", "CB", 75, 25),
+        ("Jay", "CM", 72, 22), ("Kevin De Ice", "GK", 76, 26),
+        ("Naani Jr", "LW", 65, 18), ("Nilson Spritgulo", "RB", 63, 18),
+        ("Pepperoni Passion", "ST", 73, 22), ("Petr Cake", "CM", 67, 20),
+        ("Pizza Maldini", "CB", 79, 27), ("Rio Ngumoha", "LW", 77, 19),
+        ("Rory McFries", "RW", 68, 20),
+    ],
+    "Weak Hero": [
+        ("Yeon Si-eun", "CAM", 75, 18), ("Ahn Su-ho", "ST", 77, 18),
+        ("Oh Beom-seok", "CM", 64, 18), ("Young Yi", "LW", 67, 18),
+        ("Jeon Seok-dae", "CB", 71, 19), ("Kim Gil-su", "ST", 72, 20),
+        ("Jeon Yeong-bin", "RW", 68, 18), ("Kang Woo-young", "ST", 70, 19),
+        ("Lee Jeong-chan", "RB", 63, 18), ("Han Tae-hoon", "CB", 62, 18),
+        ("Hyo Man", "CB", 69, 19), ("Oh Jin-won", "CM", 60, 18),
+        ("Kim Won-seok", "LB", 61, 18), ("Park Hu-min", "ST", 76, 19),
+        ("Na Baek-jin", "CAM", 78, 20), ("Seo Jun-tae", "CM", 65, 18),
+        ("Go Hyun-tak", "CB", 73, 19), ("Seong-jae", "CDM", 64, 18),
+        ("Do Seong-mok", "CB", 70, 19),
+    ],
+    "Alice in Borderland": [
+        ("Ryohei Arisu", "ST", 86, 24), ("Yuzuha Usagi", "LW", 84, 23),
+        ("Chishiya Shuntaro", "CAM", 87, 26), ("Kuina Hikari", "CB", 85, 25),
+        ("Karube Daikichi", "ST", 73, 24), ("Chota Segawa", "CM", 67, 24),
+        ("Mira Kano", "CAM", 82, 30), ("Aguni Morizono", "CB", 86, 32),
+        ("Suguru Niragi", "RW", 80, 26), ("Tatta Kodai", "CM", 70, 22),
+        ("Shibuki Saori", "LW", 68, 25), ("An Rizuna", "CDM", 81, 27),
+        ("Banda Sunato", "CB", 77, 28), ("Matsushita Enji", "CM", 72, 29),
+        ("Yaba Oki", "ST", 75, 28), ("Kyuma Ginji", "ST", 83, 29),
+        ("Isao Shirabi", "CB", 71, 31), ("Heiya Akane", "RW", 79, 21),
+        ("Asahi Kujo", "GK", 69, 20),
+    ],
+}[span_11](start_span)[span_11](end_span)
+
+# ============================================================================
+# CLASSES & DATA ENGINE
+# ============================================================================
+
+class Player:
+    def __init__(self, name, pos, rating, age):
+        self.name = name
+        self.pos = pos
+        self.rating = rating
+        self.age = age
+        self.goals = 0
+        self.assists = 0
+        self.apps = 0
+
+    def market_value(self):
+        val = ((self.rating / 55.0) ** 6.0) * 1.2
+        if self.age <= 21: val *= 1.25
+        elif self.age >= 30: val *= 0.8
+        return round(max(0.5, val), 2)
+
+class TableRow:
+    def __init__(self):
+        self.p = 0
+        self.w = 0
+        self.d = 0
+        self.l = 0
+        self.gf = 0
+        self.ga = 0
+        self.pts = 0
+
+    @property
+    def gd(self):
+        return self.gf - self.ga
+
+class GameState:
+    def __init__(self):
+        self.user_team = None
+        self.user_budget = 50.0
+        self.user_formation = "4-3-3"
+        self.starting_xi = []
+        self.squad = {}  # team -> dict of name: Player
+        self.table = {}
+        self.fixtures = []
+        self.matchday = 0
+        self.cup_teams = []
+        self.cup_round = 0
+        self.cup_out = False
+        self.incoming_bids = []
+
+G = GameState()
+
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+def position_group(pos):
+    pos = pos.upper()
+    if "GK" in pos: return "GK"
+    if "CB" in pos or "LB" in pos or "RB" in pos: return "DEF"
+    if "CM" in pos or "CAM" in pos or "CDM" in pos or "RM" in pos or "LM" in pos: return "MID"
+    return "ATT"
+
+def auto_select_xi(team_name):
+    roster = list(G.squad[team_name].values())
+    roster.sort(key=lambda p: p.rating, reverse=True)
+    xi = roster[:11]
+    return [p.name for p in xi]
+
+def generate_fixtures():
+    teams = list(G.squad.keys())
+    if len(teams) % 2 != 0: teams.append("BYE")
+    arr = teams[:]
+    fixtures = []
+    n = len(teams)
+    for _ in range(n - 1):
+        day = []
+        for i in range(n // 2):
+            a, b = arr[i], arr[-1 - i]
+            if a != "BYE" and b != "BYE":
+                day.append((a, b))
+        fixtures.append(day)
+        arr = [arr[0]] + [arr[-1]] + arr[1:-1]
+    return fixtures + [[(b, a) for a, b in day] for day in fixtures]
+
+def simulate_single_match(home, away):
+    h_roster = list(G.squad[home].values())
+    a_roster = list(G.squad[away].values())
+
+    h_avg = sum(p.rating for p in h_roster[:11]) / 11.0
+    a_avg = sum(p.rating for p in a_roster[:11]) / 11.0
+
+    hxg = max(0.2, 1.4 + (h_avg - a_avg) / 12.0 + random.gauss(0, 0.5))
+    axg = max(0.1, 1.1 + (a_avg - h_avg) / 12.0 + random.gauss(0, 0.5))
+
+    hg = min(8, int(random.pariovariable if hasattr(random, 'pariovariable') else random.poissonvariate(hxg) if hasattr(random, 'poissonvariate') else max(0, int(random.gauss(hxg, 1.0)))))
+    ag = min(8, int(random.gauss(axg, 1.0)))
+    hg, ag = max(0, hg), max(0, ag)
+
+    # Award stats
+    for side_roster, goals in [(h_roster, hg), (a_roster, ag)]:
+        for p in side_roster[:11]:
+            p.apps += 1
+        strikers = [p for p in side_roster if position_group(p.pos) in ("ATT", "MID")]
+        if not strikers: strikers = side_roster
+        for _ in range(goals):
+            scorer = random.choice(strikers)
+            scorer.goals += 1
+            if random.random() < 0.7:
+                assister = random.choice([p for p in side_roster[:11] if p != scorer])
+                assister.assists += 1
+
+    # Update Table
+    th, ta = G.table[home], G.table[away]
+    th.p += 1; ta.p += 1
+    th.gf += hg; th.ga += ag
+    ta.gf += ag; ta.ga += hg
+
+    if hg > ag: th.w += 1; th.pts += 3; ta.l += 1
+    elif ag > hg: ta.w += 1; ta.pts += 3; th.l += 1
+    else: th.d += 1; ta.d += 1; th.pts += 1; ta.pts += 1
+
+    return hg, ag
+
+def generate_ai_bids():
+    if random.random() < 0.4:
+        user_players = list(G.squad[G.user_team].values())
+        if user_players:
+            target = random.choice(user_players)
+            val = target.market_value()
+            offer = round(val * random.uniform(0.9, 1.3), 2)
+            buyer = random.choice([t for t in G.squad.keys() if t != G.user_team])
+            G.incoming_bids.append({"player": target, "buyer": buyer, "offer": offer})
+
+# ============================================================================
+# INTERACTIVE SCREENS
+# ============================================================================
+
+def screen_choose_club():
+    print("=" * 60)
+    print("      WELCOME TO FOOTBALL LEAGUE MANAGER - CAREER MODE      ")
+    print("=" * 60)
+    print("Select your club from the 16 available teams:\n")
+    clubs = list(TEAM_RATINGS.keys())
+    for i, c in enumerate(clubs, 1):
+        rating = TEAM_RATINGS[c]
+        squad_len = len(ROSTERS[c])
+        print(f"[{i:>2}] {c:<20} (Rating: {rating} | Squad: {squad_len})")
+
+    while True:
+        try:
+            choice = int(input("\nEnter club number (1-16): "))
+            if 1 <= choice <= 16:
+                G.user_team = clubs[choice - 1]
+                break
+        except ValueError:
+            pass
+        print("Invalid choice, please select between 1 and 16.")
+
+    # Initialize Squads
+    for team, players in ROSTERS.items():
+        G.squad[team] = {p[0]: Player(p[0], p[1], p[2], p[3]) for p in players}
+        G.table[team] = TableRow()
+
+    G.starting_xi = auto_select_xi(G.user_team)
+    G.fixtures = generate_fixtures()
+    G.cup_teams = list(G.squad.keys())
+    random.shuffle(G.cup_teams)
+
+    print(f"\nCongratulations! You are now the manager of {G.user_team}!")
+    input("Press Enter to continue to Manager Dashboard...")
+
+def screen_lineup():
+    print("\n" + "=" * 50)
+    print(f"       SQUAD & LINEUP MANAGER - {G.user_team.upper()}")
+    print("=" * 50)
+    print(f"Current Formation: {G.user_formation} | Squad Size: {len(G.squad[G.user_team])}/26\n")
+
+    print("STARTING 11:")
+    for i, p_name in enumerate(G.starting_xi, 1):
+        p = G.squad[G.user_team][p_name]
+        print(f" {i:>2}. [{p.pos:<3}] {p.name:<24} Rating: {p.rating}")
+
+    print("\nRESERVES / BENCH:")
+    bench = [p for p in G.squad[G.user_team].values() if p.name not in G.starting_xi]
+    for i, p in enumerate(bench, 1):
+        print(f" {i:>2}. [{p.pos:<3}] {p.name:<24} Rating: {p.rating}")
+
+    print("\nOPTIONS:")
+    print(" [1] Swap Starting Player with Reserve")
+    print(" [2] Change Formation")
+    print(" [3] Auto-Pick Best XI")
+    print(" [0] Back to Main Menu")
+
+    opt = input("\nSelect Option: ").strip()
+    if opt == "1":
+        try:
+            s_idx = int(input("Select Starting Player # to replace (1-11): ")) - 1
+            r_idx = int(input("Select Reserve Player # to insert: ")) - 1
+            if 0 <= s_idx < 11 and 0 <= r_idx < len(bench):
+                G.starting_xi[s_idx] = bench[r_idx].name
+                print("Swap successful!")
+        except ValueError:
+            print("Invalid input.")
+    elif opt == "2":
+        print("\nAvailable Formations:", ", ".join(FORMATION_SPECS.keys()))
+        f_choice = input("Enter formation: ").strip()
+        if f_choice in FORMATION_SPECS:
+            G.user_formation = f_choice
+            print(f"Formation changed to {f_choice}")
+    elif opt == "3":
+        G.starting_xi = auto_select_xi(G.user_team)
+        print("Auto-selected highest rated players!")
+
+def screen_table():
+    print("\n" + "=" * 65)
+    print(f"                LEAGUE TABLE - MATCHDAY {G.matchday}/{MATCHDAYS_PER_SEASON}")
+    print("=" * 65)
+    print(f"{'#':>2} {'TEAM':<20} {'P':>2} {'W':>2} {'D':>2} {'L':>2} {'GF':>3} {'GA':>3} {'GD':>4} {'PTS':>3}")
+    print("-" * 65)
+
+    sorted_table = sorted(G.table.items(), key=lambda x: (x[1].pts, x[1].gd, x[1].gf), reverse=True)
+    for i, (team, row) in enumerate(sorted_table, 1):
+        mark = " <-- YOU" if team == G.user_team else ""
+        print(f"{i:>2} {team:<20} {row.p:>2} {row.w:>2} {row.d:>2} {row.l:>2} {row.gf:>3} {row.ga:>3} {row.gd:>4} {row.pts:>3}{mark}")
+
+    input("\nPress Enter to return...")
+
+def screen_leaderboards():
+    print("\n" + "=" * 50)
+    print("               PLAYER LEADERBOARDS")
+    print("=" * 50)
+
+    all_players = [p for t in G.squad.values() for p in t.values()]
+
+    print("\n--- TOP GOALSEEKERS ---")
+    top_goals = sorted(all_players, key=lambda x: x.goals, reverse=True)[:10]
+    for i, p in enumerate(top_goals, 1):
+        print(f"{i:>2}. {p.name:<22} Goals: {p.goals:>2} | Apps: {p.apps:>2}")
+
+    print("\n--- TOP ASSISTERS ---")
+    top_assists = sorted(all_players, key=lambda x: x.assists, reverse=True)[:10]
+    for i, p in enumerate(top_assists, 1):
+        print(f"{i:>2}. {p.name:<22} Assists: {p.assists:>2} | Apps: {p.apps:>2}")
+
+    input("\nPress Enter to return...")
+
+def screen_transfers():
+    while True:
+        print("\n" + "=" * 50)
+        print("                 TRANSFER MARKET")
+        print("=" * 50)
+        print(f"Transfer Budget: ${G.user_budget:.2f}M | Squad Size: {len(G.squad[G.user_team])}/{MAX_SQUAD_SIZE}")
+        print(f"Pending Incoming Offers: {len(G.incoming_bids)}\n")
+
+        print(" [1] Buy Players from other clubs")
+        print(" [2] Sell your players")
+        print(" [3] Review incoming transfer bids")
+        print(" [0] Back to Main Menu")
+
+        opt = input("\nSelect Option: ").strip()
+        if opt == "1":
+            if len(G.squad[G.user_team]) >= MAX_SQUAD_SIZE:
+                print("Squad full! (Max 26 players). Sell a player first.")
+                continue
+
+            print("\nSelect a team to buy players from:")
+            other_teams = [t for t in G.squad.keys() if t != G.user_team]
+            for i, t in enumerate(other_teams, 1):
+                print(f" [{i:>2}] {t}")
+            t_choice = input("Select team number: ").strip()
+            if t_choice.isdigit() and 1 <= int(t_choice) <= len(other_teams):
+                seller_team = other_teams[int(t_choice) - 1]
+                seller_players = list(G.squad[seller_team].values())
+                print(f"\nPlayers available at {seller_team}:")
+                for i, p in enumerate(seller_players, 1):
+                    print(f" [{i:>2}] {p.name:<22} Pos: {p.pos:<3} OVR: {p.rating} Val: ${p.market_value()}M")
+                p_choice = input("Select player to buy (0 to cancel): ").strip()
+                if p_choice.isdigit() and 1 <= int(p_choice) <= len(seller_players):
+                    target_p = seller_players[int(p_choice) - 1]
+                    cost = target_p.market_value()
+                    if G.user_budget >= cost:
+                        G.user_budget -= cost
+                        del G.squad[seller_team][target_p.name]
+                        G.squad[G.user_team][target_p.name] = target_p
+                        print(f"\nSUCCESS! You signed {target_p.name} for ${cost}M!")
+                    else:
+                        print("Insufficient budget!")
+        elif opt == "2":
+            user_p = list(G.squad[G.user_team].values())
+            print("\nYour Squad:")
+            for i, p in enumerate(user_p, 1):
+                print(f" [{i:>2}] {p.name:<22} Pos: {p.pos:<3} OVR: {p.rating} Val: ${p.market_value()}M")
+            p_choice = input("Select player to sell (0 to cancel): ").strip()
+            if p_choice.isdigit() and 1 <= int(p_choice) <= len(user_p):
+                target_p = user_p[int(p_choice) - 1]
+                if len(G.squad[G.user_team]) <= 11:
+                    print("Cannot sell! Minimum 11 squad players required.")
+                    continue
+                price = target_p.market_value()
+                G.user_budget += price
+                del G.squad[G.user_team][target_p.name]
+                if target_p.name in G.starting_xi:
+                    G.starting_xi = auto_select_xi(G.user_team)
+                print(f"Sold {target_p.name} for ${price}M!")
+        elif opt == "3":
+            if not G.incoming_bids:
+                print("No pending bids.")
+                continue
+            bid = G.incoming_bids.pop(0)
+            p = bid["player"]
+            buyer = bid["buyer"]
+            offer = bid["offer"]
+            print(f"\nOFFER: {buyer} wants to buy {p.name} (OVR {p.rating}) for ${offer}M!")
+            ans = input("Accept bid? (y/n): ").strip().lower()
+            if ans == 'y':
+                if len(G.squad[G.user_team]) <= 11:
+                    print("Cannot accept! Squad would fall below 11 players.")
+                else:
+                    G.user_budget += offer
+                    del G.squad[G.user_team][p.name]
+                    G.squad[buyer][p.name] = p
+                    if p.name in G.starting_xi:
+                        G.starting_xi = auto_select_xi(G.user_team)
+                    print(f"Accepted offer! Received ${offer}M.")
+            else:
+                print("Offer rejected.")
+        elif opt == "0":
+            break
+
+def run_cup_round():
+    if len(G.cup_teams) <= 1 or G.cup_out:
+        return
+
+    print("\n" + "=" * 50)
+    print(f"              KNOCKOUT CUP - ROUND {G.cup_round + 1}")
+    print("=" * 50)
+
+    next_round_teams = []
+    for i in range(0, len(G.cup_teams), 2):
+        if i + 1 >= len(G.cup_teams):
+            next_round_teams.append(G.cup_teams[i])
+            break
+
+        t1, t2 = G.cup_teams[i], G.cup_teams[i + 1]
+        hg, ag = simulate_single_match(t1, t2)
+
+        if hg == ag:
+            winner = t1 if random.random() < 0.5 else t2
+        else:
+            winner = t1 if hg > ag else t2
+
+        print(f" Cup Match: {t1} {hg} - {ag} {t2}  --> Winner: {winner}")
+
+        if G.user_team in (t1, t2) and winner != G.user_team:
+            G.cup_out = True
+            print(" You were eliminated from the Cup!")
+
+        next_round_teams.append(winner)
+
+    G.cup_teams = next_round_teams
+    G.cup_round += 1
+
+def simulate_matchday():
+    if G.matchday >= MATCHDAYS_PER_SEASON:
+        print("Season has concluded! View summary.")
+        return
+
+    m_fixtures = G.fixtures[G.matchday]
+    G.matchday += 1
+
+    print(f"\n=== MATCHDAY {G.matchday}/{MATCHDAYS_PER_SEASON} RESULTS ===")
+    user_match_str = ""
+
+    for h, a in m_fixtures:
+        hg, ag = simulate_single_match(h, a)
+        if h == G.user_team or a == G.user_team:
+            user_match_str = f"YOUR MATCH: {h} {hg} - {ag} {a}"
+        else:
+            print(f" {h:<18} {hg} - {ag} {a}")
+
+    if user_match_str:
+        print("\n" + "*" * 40)
+        print(f" {user_match_str}")
+        print("*" * 40)
+
+    # Cup competition every 5 matchdays
+    if G.matchday % 5 == 0 and not G.cup_out:
+        run_cup_round()
+
+    generate_ai_bids()
+
+def screen_season_summary():
+    print("\n" + "=" * 60)
+    print("                 END OF SEASON SUMMARY")
+    print("=" * 60)
+
+    sorted_table = sorted(G.table.items(), key=lambda x: (x[1].pts, x[1].gd, x[1].gf), reverse=True)
+    pos = [i for i, (team, _) in enumerate(sorted_table, 1) if team == G.user_team][0]
+
+    print(f" Final League Position: #{pos} / 16")
+    print(f" Total Points: {G.table[G.user_team].pts} | Record: {G.table[G.user_team].w}W-{G.table[G.user_team].d}D-{G.table[G.user_team].l}L")
+
+    # Team top scorer
+    user_players = list(G.squad[G.user_team].values())
+    top_scorer = sorted(user_players, key=lambda x: x.goals, reverse=True)[0]
+    print(f" Club Top Scorer: {top_scorer.name} ({top_scorer.goals} Goals)")
+
+    # League top scorer
+    all_players = [p for t in G.squad.values() for p in t.values()]
+    league_top = sorted(all_players, key=lambda x: x.goals, reverse=True)[0]
+    print(f" Golden Boot Winner: {league_top.name} ({league_top.goals} Goals)")
+
+    input("\nPress Enter to return...")
+
+# ============================================================================
+# MAIN MENU LOOP
+# ============================================================================
+
+def main():
+    screen_choose_club()
+
+    while True:
+        print("\n" + "=" * 50)
+        print(f"  {G.user_team.upper()} MANAGER DASHBOARD - MD {G.matchday}/{MATCHDAYS_PER_SEASON}")
+        print("=" * 50)
+        if G.incoming_bids:
+            print(f" [!] YOU HAVE {len(G.incoming_bids)} PENDING TRANSFER BID(S)!")
+
+        print(" [1] Simulate Next Matchday")
+        print(" [2] Simulate Full Season")
+        print(" [3] View League Table")
+        print(" [4] Squad & Formation Setup")
+        print(" [5] Transfer Market (Buy/Sell)")
+        print(" [6] Player Leaderboards")
+        if G.matchday >= MATCHDAYS_PER_SEASON:
+            print(" [7] Season Summary")
+        print(" [0] Exit Game")
+
+        choice = input("\nSelect Action: ").strip()
+
+        if choice == "1":
+            simulate_matchday()
+        elif choice == "2":
+            print("\nSimulating remaining matches...")
+            while G.matchday < MATCHDAYS_PER_SEASON:
+                simulate_matchday()
+            screen_season_summary()
+        elif choice == "3":
+            screen_table()
+        elif choice == "4":
+            screen_lineup()
+        elif choice == "5":
+            screen_transfers()
+        elif choice == "6":
+            screen_leaderboards()
+        elif choice == "7" and G.matchday >= MATCHDAYS_PER_SEASON:
+            screen_season_summary()
+        elif choice == "0":
+            print("\nThanks for playing Football League Manager!")
+            sys.exit()
+
+if __name__ == "__main__":
+    main()
