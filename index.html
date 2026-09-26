@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fen Valley Manager</title>
+<style>
+:root{
+  --bg:#0b160f; --panel:#14291b; --panel2:#1c3826; --line:#2a4d36;
+  --gold:#d4af61; --gold-dim:#8f752f; --text:#eef0e8; --dim:#93ab9d;
+  --red:#d16d5f; --green:#66b389; --blue:#6d9fc4; --purple:#a97fe0;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0b160f;}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px); height:100%}
+body{margin:0;height:100%;background:
+  radial-gradient(ellipse at top, #163523 0%, var(--bg) 55%);
+  background-attachment:fixed;
+  color:var(--text);font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;-webkit-tap-highlight-color:transparent}
+h1,h2,h3{font-family:Georgia,'Times New Roman',serif;margin:.2em 0;letter-spacing:.3px}
+h2{font-size:17px;color:var(--gold);padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:10px}
+h3{font-size:14.5px;color:var(--gold)}
+::-webkit-scrollbar{height:6px;width:6px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+header{position:sticky;top:0;padding:10px 14px 12px;padding-top:calc(10px + env(safe-area-inset-top,0px));background:linear-gradient(180deg,#1b3d27,#0f2417 90%);border-bottom:2px solid var(--gold-dim);box-shadow:0 4px 14px rgba(0,0,0,.35);z-index:5}
+header h1{font-size:16.5px;color:var(--gold);margin:0 0 8px;display:flex;align-items:center;gap:7px;letter-spacing:.4px}
+.hchips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.hstat{font-size:11.5px;color:var(--dim);background:rgba(0,0,0,.18);border:1px solid var(--line);padding:4px 9px;border-radius:20px;white-space:nowrap;flex:none}
+.hstat b{color:var(--text);font-weight:700}
+.hstat b.warn{color:var(--red)}
+.hstat b.good{color:var(--green)}
+nav{display:flex;gap:2px;overflow-x:auto;padding:6px 8px;background:#0e1f15;border-bottom:1px solid var(--line)}
+nav button{background:none;border:none;border-bottom:2.5px solid transparent;color:var(--dim);padding:8px 12px 6px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:color .15s ease,border-color .15s ease}
+nav button.on{color:var(--gold);border-bottom-color:var(--gold)}
+nav button:active{opacity:.6}
+main{padding:14px;max-width:1000px;margin:0 auto}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.22);animation:fadeIn .28s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--gold);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0;background:var(--panel)}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+tr.me{background:#1f4029!important}
+tr.me td:first-child{border-left:3px solid var(--gold)}
+tr.promo td:first-child{border-left:3px solid var(--green)}
+tr.rel td:first-child{border-left:3px solid var(--red)}
+tr.cl td:first-child{border-left:3px solid var(--gold)}
+tr.el td:first-child{border-left:3px solid var(--blue)}
+tr.ecl td:first-child{border-left:3px solid var(--purple)}
+.scroll{overflow-x:auto}
+button{font-family:inherit}
+button.act{background:linear-gradient(180deg,var(--gold),var(--gold-dim));color:#161005;border:none;padding:9px 16px;border-radius:7px;cursor:pointer;font-weight:700;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .1s ease,filter .15s ease}
+button.act:hover{filter:brightness(1.08)}
+button.act:active{transform:scale(.97)}
+button.act:disabled{opacity:.35;cursor:default;filter:none;box-shadow:none}
+button.sub{background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--dim);padding:7px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;transition:border-color .15s ease,color .15s ease,background .15s ease}
+button.sub:hover{border-color:var(--gold-dim);color:var(--text);background:rgba(255,255,255,.05)}
+button.sub:active{transform:scale(.97)}
+button.sub:disabled{opacity:.35;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.news li{padding:7px 2px;border-bottom:1px dashed var(--line);font-size:13px;line-height:1.4}
+.news li:last-child{border:none}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:800;letter-spacing:.3px}
+.tag.gk{background:#4a3f1f;color:#f0d896}.tag.def{background:#1f3a4a;color:#a9d4f0}.tag.mid{background:#1f4a2e;color:#a9f0c0}.tag.att{background:#4a1f1f;color:#f0a9a9}
+select,input[type=number]{background:#0e2016;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 8px;font-size:12.5px}
+select:focus,input:focus{outline:2px solid var(--gold-dim);outline-offset:1px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr 1fr}}
+.stat{background:rgba(0,0,0,.15);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+.stat .muted{font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.big{font-size:21px;color:var(--gold);font-family:Georgia,serif;line-height:1.25}
+.muted{color:var(--dim)}
+.bar{height:7px;background:#0e2016;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin:5px 0}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold))}
+.devcard{border:1px solid var(--line);border-radius:9px;padding:11px;margin-bottom:10px;background:#0e2016}
+.slot{border:1px solid var(--line);border-radius:7px;padding:7px 9px;margin-bottom:6px;background:#0e2016;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.mreport li{padding:5px 2px;font-size:13px;border-bottom:1px dashed var(--line)}
+.mreport li:last-child{border:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚽ FEN VALLEY MANAGER</h1>
+  <div class="hchips">
+    <span class="hstat">🗓 S<b id="hSeason">1</b></span>
+    <span class="hstat">⏱ MD <b id="hMD">0</b>/<span id="hMDmax">0</span></span>
+    <span class="hstat">🏟 <b id="hClub">-</b></span>
+    <span class="hstat">📶 <b id="hDiv">-</b></span>
+    <span class="hstat">💰 <b id="hBudget">-</b></span>
+    <span class="hstat">📋 Rep <b id="hRep">-</b></span>
+    <span class="hstat">🙂 Morale <b id="hMorale">-</b></span>
+  </div>
+</header>
+<nav id="nav"></nav>
+<main id="main"></main>
+
+<script>
+(function(){
+"use strict";
+const KEY="fenvalley_save_v3";
+const DIVS=["Division 1","Division 2","Division 3","Division 4","Division 5"];
+const TEAMS_PER_DIV=20;
+const MOVE_COUNT=3;
+const SQUAD_CAP=26;
+const CITY=["Ironbridge","Port Vale","Meridian","Blackthorn","Sundale","Northgate","Cascade","Ashford","Silvermoor","Redcliff","Wavecrest","Granite","Fenwick","Oakhaven","Thorncastle","Millbrook","Harrowgate","Kingsmere","Draymoor","Stonebridge"];
+const SUFFIX=["United","Athletic","City","Rovers","Wanderers","Town"];
+const FIRST=["Marcus","Diego","Kwame","Luca","Owen","Rafael","Jonas","Andre","Milo","Theo","Yusuf","Emil","Bruno","Cole","Nikolai","Sami","Aldo","Reece","Tobin","Igor","Kai","Pierre","Malik","Enzo","Felix","Roman","Dario","Amir","Leon","Toma"];
+const LAST=["Kovac","Silva","Adeyemi","Bianchi","Nkemdirim","Fernandes","Larsson","Volkov","Reyes","Hartmann","Okafor","Brennan","Castellano","Dubois","Ferreira","Nowak","Osei","Petrov","Ramsay","Torres","Vidal","Weiss","Zimmer","Costa","Ibarra","Sorensen","Mensah","Delgado","Krause","Novak"];
+const POSDEF=[["GK",2],["CB",4],["LB",1],["RB",1]];
+const POSMID=[["CM",4],["CAM",2]];
+const POSATT=[["LW",1],["RW",1],["ST",2]];
+const CATS={GK:"gk",CB:"def",LB:"def",RB:"def",CM:"mid",CAM:"mid",LW:"att",RW:"att",ST:"att"};
+const DIV_BASE_TIER={"Division 1":5,"Division 2":4,"Division 3":3,"Division 4":2,"Division 5":1};
+const DIV_SPONSOR={"Division 1":230000,"Division 2":183000,"Division 3":136000,"Division 4":97000,"Division 5":79000};
+const DIV_PRIZE_TOP={"Division 1":420000,"Division 2":333000,"Division 3":247000,"Division 4":176000,"Division 5":144000};
+const FORMATIONS={
+  "4-4-2":["gk","def","def","def","def","mid","mid","mid","mid","att","att"],
+  "4-3-3":["gk","def","def","def","def","mid","mid","mid","att","att","att"],
+  "3-5-2":["gk","def","def","def","mid","mid","mid","mid","mid","att","att"],
+  "5-3-2":["gk","def","def","def","def","def","mid","mid","mid","att","att"]
+};
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function pick(arr){return arr[ri(0,arr.length-1)]}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function money(n){return (n<0?"-":"")+"£"+Math.abs(Math.round(n)).toLocaleString()}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=ri(0,i);[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+let S=null;
+
+function newPlayer(pos,tier){
+  const age=ri(17,33);
+  const base=34+tier*7+ri(-8,8)-(age>30?(age-30)*2:0)+(age<21?-4:0);
+  const ovr=clamp(base,30,90);
+  const pot=age<23?clamp(ovr+ri(2,16),ovr,94):ovr;
+  const value=Math.round(Math.pow(ovr,2.15)*(age<27?24:12)*(age<20?1.4:1));
+  return {name:pick(FIRST)+" "+pick(LAST),pos,age,ovr,pot,value,
+    contract:ri(1,4),goals:0,assists:0,apps:0,careerGoals:0,careerAssists:0,careerApps:0,
+    form:0,injured:0,loan:false,originalTeam:null,
+    id:Math.random().toString(36).slice(2,9)};
+}
+function makeSquad(tier){
+  const sq=[];
+  [...POSDEF,...POSMID,...POSATT].forEach(([pos,n])=>{for(let i=0;i<n;i++)sq.push(newPlayer(pos,tier));});
+  return sq;
+}
+function genTeamNames(n){
+  const combos=new Set();
+  CITY.forEach(c=>SUFFIX.forEach(s=>combos.add(c+" "+s)));
+  return shuffle([...combos]).slice(0,n);
+}
+function roundRobin(names){
+  let list=names.slice(); if(list.length%2) list.push(null);
+  const n=list.length, rounds=n-1, half=n/2, days=[];
+  for(let r=0;r<rounds;r++){
+    const pairs=[];
+    for(let i=0;i<half;i++){const h=list[i],a=list[n-1-i]; if(h&&a) pairs.push(r%2===0?[h,a]:[a,h]);}
+    days.push(pairs);
+    list.splice(1,0,list.pop());
+  }
+  return days.concat(days.map(d=>d.map(([h,a])=>[a,h])));
+}
+function regenerateFixtures(){
+  S.fixturesByDiv={};
+  DIVS.forEach(d=>{S.fixturesByDiv[d]=roundRobin(S.divisions[d]);});
+  S.maxMD=S.fixturesByDiv[DIVS[0]].length;
+  S.matchday=0;
+}
+function freshFreeAgents(){return Array.from({length:12},()=>newPlayer(pick(["CB","CM","ST","GK","LW"]),ri(1,3)));}
+const CUP_BONUS={"Round of 40":8000,"Round of 20":15000,"Round of 10":30000,"Quarter-Final":50000,"Semi-Final":90000,"Final":150000};
+const CUP_WINNER_BONUS=300000;
+const CUP_CFG={tag:"CUP",trophyName:"Fen Valley Cup",roundBonusTable:CUP_BONUS,winnerBonus:CUP_WINNER_BONUS,winnerRepBonus:10};
+const EURO_CFG={
+  cl:{tag:"CL",trophyName:"Fen Valley Champions League",roundBonusTable:{"Semi-Final":20000},winnerBonus:180000,winnerRepBonus:15},
+  el:{tag:"EL",trophyName:"Fen Valley Europa League",roundBonusTable:{},winnerBonus:90000,winnerRepBonus:8},
+  ecl:{tag:"ECL",trophyName:"Fen Valley Conference League",roundBonusTable:{},winnerBonus:45000,winnerRepBonus:5}
+};
+function roundLabel(n){if(n<=2) return "Final"; if(n<=4) return "Semi-Final"; if(n<=8) return "Quarter-Final"; return "Round of "+n;}
+function makePairs(teams){
+  const t=shuffle(teams); const pairs=[]; let i=0;
+  if(t.length%2===1){pairs.push([t[0]]); i=1;}
+  for(;i<t.length;i+=2) pairs.push([t[i],t[i+1]]);
+  return pairs;
+}
+function newKnockout(teams){
+  return teams.length?{teams,round:1,roundName:roundLabel(teams.length),fixtures:makePairs(teams),champion:null,active:true,lastRoundLog:[]}:null;
+}
+function runKnockoutRound(comp,cfg){
+  if(!comp||!comp.active) return;
+  const pairs=comp.fixtures, winners=[], log=[];
+  pairs.forEach(pair=>{
+    if(pair.length===1){winners.push(pair[0]); log.push(pair[0]+" advances with a bye"); return;}
+    const [h,a]=pair;
+    const r=simMatch(h,a);
+    let winner, pk=false;
+    if(r.hg>r.ag) winner=h; else if(r.ag>r.hg) winner=a; else {winner=Math.random()<0.5?h:a; pk=true;}
+    winners.push(winner);
+    log.push(h+" "+r.hg+"-"+r.ag+" "+a+(pk?" ("+winner+" win on penalties)":""));
+    if(h===S.userTeam||a===S.userTeam){
+      S.news.unshift(cfg.tag+" "+comp.roundName+": "+h+" "+r.hg+"-"+r.ag+" "+a+(pk?" — "+winner+" through on penalties":""));
+      if(winner===S.userTeam){
+        const bonus=(cfg.roundBonusTable&&cfg.roundBonusTable[comp.roundName])||0;
+        if(bonus){S.budget+=bonus; S.news.unshift(cfg.tag+" run bonus: +"+money(bonus));}
+      } else {
+        S.news.unshift(S.userTeam+" eliminated from the "+cfg.trophyName+".");
+      }
+    }
+  });
+  comp.lastRoundLog=log;
+  if(winners.length===1){
+    comp.champion=winners[0]; comp.active=false;
+    S.news.unshift("🏆 "+winners[0]+" win the "+cfg.trophyName+"!");
+    if(winners[0]===S.userTeam){
+      if(cfg.winnerBonus){S.budget+=cfg.winnerBonus; S.news.unshift(cfg.trophyName+" winner bonus: +"+money(cfg.winnerBonus));}
+      if(cfg.winnerRepBonus) S.reputation=clamp(S.reputation+cfg.winnerRepBonus,0,100);
+    }
+  } else {
+    comp.teams=winners; comp.round++; comp.roundName=roundLabel(winners.length); comp.fixtures=makePairs(winners);
+  }
+  save();
+}
+function cupStartSeason(){
+  const allTeams=DIVS.flatMap(d=>S.divisions[d]);
+  S.cup=newKnockout(allTeams);
+}
+function simCupRound(){ runKnockoutRound(S.cup,CUP_CFG); }
+function simEuroRound(key){ if(S.euro) runKnockoutRound(S.euro[key],EURO_CFG[key]); }
+function euroStartSeason(div1Standings,cupChampion){
+  const clTeams=div1Standings.slice(0,4).map(r=>r.team);
+  const elTeams=div1Standings.slice(4,6).map(r=>r.team);
+  let eclTeams=div1Standings.slice(6,7).map(r=>r.team);
+  if(cupChampion && !clTeams.includes(cupChampion) && !elTeams.includes(cupChampion) && !eclTeams.includes(cupChampion)){
+    eclTeams=eclTeams.concat([cupChampion]);
+  }
+  S.euro={cl:newKnockout(clTeams),el:newKnockout(elTeams),ecl:newKnockout(eclTeams)};
+}
+function newWorld(){
+  const allNames=genTeamNames(TEAMS_PER_DIV*DIVS.length);
+  const divisions={}, table={}, players={}, teamDiv={};
+  let idx=0;
+  DIVS.forEach(d=>{
+    divisions[d]=[];
+    for(let i=0;i<TEAMS_PER_DIV;i++){
+      const name=allNames[idx++]; divisions[d].push(name); teamDiv[name]=d;
+      const tier=clamp(DIV_BASE_TIER[d]+ri(-1,1),1,5);
+      players[name]=makeSquad(tier);
+      table[name]={p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0,ded:0};
+    }
+  });
+  S={season:1,matchday:0,maxMD:0,divisions,teamDiv,players,table,
+     userTeam:null,userDiv:null,budget:0,news:[],hallOfFame:[],history:[],tactic:"balanced",
+     club:{stadium:1,academy:1,scouting:1,training:1,medical:1,spirit:1},lastFinance:null,fixturesByDiv:{},
+     reputation:50,morale:50,sacked:false,sackReason:"",lineup:null,freeAgents:freshFreeAgents(),
+     lastMatchReport:null,cup:null,seasonWages:0,seasonRevenue:0,objective:null,lastEuro:null,
+     rival:null,pendingEvent:null,euro:null};
+  regenerateFixtures();
+  cupStartSeason();
+}
+
+function lineupValid(){
+  if(!S.lineup || !S.lineup.slots || S.lineup.slots.length!==11) return false;
+  const ids=S.lineup.slots;
+  if(ids.some(id=>!id)) return false;
+  if(new Set(ids).size!==11) return false;
+  const roster=S.players[S.userTeam];
+  return ids.every(id=>{const p=roster.find(x=>x.id===id); return p && !(p.injured>0);});
+}
+function setFormation(key){
+  const cats=FORMATIONS[key];
+  const old=(S.lineup&&S.lineup.slots)||[];
+  S.lineup={formation:key,slots:cats.map((c,i)=>old[i]||"")};
+  save();
+}
+function autoFillXI(){
+  if(!S.lineup) setFormation("4-4-2");
+  const cats=FORMATIONS[S.lineup.formation];
+  const roster=S.players[S.userTeam].filter(p=>!(p.injured>0));
+  const used=new Set();
+  S.lineup.slots=cats.map(cat=>{
+    const cand=roster.filter(p=>CATS[p.pos]===cat && !used.has(p.id)).sort((a,b)=>b.ovr-a.ovr)[0];
+    if(cand){used.add(cand.id); return cand.id;} return "";
+  });
+  save();
+}
+function squadStrength(team,tactic){
+  const fit=p=>!(p.injured>0);
+  let roster=S.players[team].filter(fit);
+  const by=(cat,list)=>list.filter(p=>CATS[p.pos]===cat).sort((a,b)=>b.ovr-a.ovr);
+  const avgTop=arr=>{if(!arr.length) return 45; const n=Math.max(1,Math.ceil(arr.length*0.55)); const top=arr.slice(0,n); return top.reduce((s,p)=>s+p.ovr,0)/top.length;};
+  const avgAll=arr=>arr.length?arr.reduce((s,p)=>s+p.ovr,0)/arr.length:45;
+  let def,mid,att,formBonus=0;
+  const useXI=team===S.userTeam && lineupValid();
+  if(useXI){
+    const xi=S.lineup.slots.map(id=>roster.find(p=>p.id===id)).filter(Boolean);
+    def=avgAll(xi.filter(p=>CATS[p.pos]==="def"||CATS[p.pos]==="gk"));
+    mid=avgAll(xi.filter(p=>CATS[p.pos]==="mid"));
+    att=avgAll(xi.filter(p=>CATS[p.pos]==="att"));
+    formBonus=(xi.reduce((s,p)=>s+p.form,0)/xi.length)*0.5;
+  } else {
+    def=avgTop(by("def",roster).concat(by("gk",roster)));
+    mid=avgTop(by("mid",roster));
+    att=avgTop(by("att",roster));
+  }
+  let atkMul=1, defMul=1;
+  if(tactic==="attacking"){atkMul=1.12;defMul=0.9;}
+  if(tactic==="defensive"){atkMul=0.88;defMul=1.12;}
+  let moraleMul=team===S.userTeam?1+(S.morale-50)/500:1;
+  return {atk:((att*0.65+mid*0.35)*atkMul+formBonus)*moraleMul, def:(def*0.65+mid*0.35)*defMul*moraleMul, roster};
+}
+function poissonish(exp){
+  exp=Math.max(0.05,exp);
+  let l=Math.exp(-exp),k=0,p=1;
+  do{k++;p*=Math.random();}while(p>l && k<10);
+  return k-1;
+}
+function simMatch(home,away){
+  const hs=squadStrength(home, home===S.userTeam?S.tactic:"balanced");
+  const as=squadStrength(away, away===S.userTeam?S.tactic:"balanced");
+  const hExp=clamp((hs.atk-as.def)/9+1.55,0.15,4.2);
+  const aExp=clamp((as.atk-hs.def)/9+1.15,0.1,3.8);
+  const hg=poissonish(hExp), ag=poissonish(aExp);
+  const events=[];
+  function goalEvents(team,goals,roster){
+    const attackers=roster.filter(p=>CATS[p.pos]!=="gk").sort((a,b)=>b.ovr-a.ovr);
+    for(let i=0;i<goals;i++){
+      const pool=attackers.slice(0,8);
+      const sc=pool.length?pick(pool):null;
+      if(!sc) continue;
+      sc.goals++; sc.form=clamp(sc.form+1,-3,3);
+      let assistText="";
+      if(Math.random()<0.65){
+        const assistPool=roster.filter(p=>p.id!==sc.id && CATS[p.pos]!=="gk");
+        if(assistPool.length){const asp=pick(assistPool); asp.assists++; assistText=" (assist: "+asp.name+")";}
+      }
+      events.push({min:ri(1,90),team,text:"⚽ "+sc.name+" ("+team+")"+assistText});
+    }
+  }
+  goalEvents(home,hg,hs.roster);
+  goalEvents(away,ag,as.roster);
+  function injuryPass(roster,team){
+    const isUser=team===S.userTeam;
+    const medLvl=isUser?S.club.medical:1;
+    const chance=0.035*(1-(medLvl-1)*0.15);
+    const maxDur=isUser?Math.max(2,7-medLvl):6;
+    roster.forEach(p=>{
+      p.apps++;
+      if(Math.random()<chance){
+        const dur=ri(1,maxDur); p.injured=dur;
+        events.push({min:ri(1,90),team:null,text:"🚑 "+p.name+" picks up an injury (out "+dur+" matches)"});
+      }
+    });
+  }
+  injuryPass(hs.roster,home);
+  injuryPass(as.roster,away);
+  events.sort((a,b)=>a.min-b.min);
+  return {hg,ag,events};
+}
+function updateTable(team,gf,ga){
+  const t=S.table[team]; t.p++; t.gf+=gf; t.ga+=ga;
+  if(gf>ga){t.w++;t.pts+=3;} else if(gf===ga){t.d++;t.pts++;} else t.l++;
+}
+function simMatchday(){
+  if(S.matchday>=S.maxMD) return;
+  Object.values(S.players).forEach(ros=>ros.forEach(p=>{if(p.injured>0)p.injured--;}));
+  const recoverRate=S.userTeam?S.club.spirit:1;
+  if(S.morale>50) S.morale=Math.max(50,S.morale-recoverRate); else if(S.morale<50) S.morale=Math.min(50,S.morale+recoverRate);
+  DIVS.forEach(d=>{
+    const pairs=S.fixturesByDiv[d][S.matchday];
+    pairs.forEach(([h,a])=>{
+      const r=simMatch(h,a);
+      updateTable(h,r.hg,r.ag); updateTable(a,r.ag,r.hg);
+      if(h===S.userTeam||a===S.userTeam){
+        S.lastMatchReport={home:h,away:a,hg:r.hg,ag:r.ag,events:r.events,md:S.matchday+1,div:d};
+        const userIsHome=h===S.userTeam;
+        const gf=userIsHome?r.hg:r.ag, ga=userIsHome?r.ag:r.hg;
+        const isDerby=S.rival&&(h===S.rival||a===S.rival);
+        let moraleDelta=gf>ga?4:gf===ga?0:-4;
+        if(isDerby){moraleDelta=Math.round(moraleDelta*1.5); S.reputation=clamp(S.reputation+(gf>ga?2:gf<ga?-2:0),0,100);}
+        if(moraleDelta<0) moraleDelta=Math.round(moraleDelta*(1-(S.club.spirit-1)*0.12));
+        S.morale=clamp(S.morale+moraleDelta,0,100);
+        const tag=isDerby?"🔥 DERBY! ":"";
+        if(userIsHome){
+          const rev=Math.round((DIV_SPONSOR[S.userDiv]/(TEAMS_PER_DIV-1))*(1+0.18*(S.club.stadium-1)));
+          S.budget+=rev; S.seasonRevenue+=rev;
+          S.news.unshift(tag+"MD"+(S.matchday+1)+" ("+d+"): "+h+" "+r.hg+"-"+r.ag+" "+a+" — matchday revenue +"+money(rev));
+        } else {
+          S.news.unshift(tag+"MD"+(S.matchday+1)+" ("+d+"): "+h+" "+r.hg+"-"+r.ag+" "+a);
+        }
+      }
+    });
+  });
+  S.matchday++;
+  if(S.userTeam && !S.pendingEvent && Math.random()<0.18) triggerRandomEvent();
+}
+function setRival(){
+  const others=S.divisions[S.userDiv].filter(t=>t!==S.userTeam);
+  S.rival=others.length?pick(others):null;
+}
+function triggerRandomEvent(){
+  const roster=S.players[S.userTeam];
+  const pool=[];
+  pool.push(()=>{
+    const sellable=roster.filter(p=>p.ovr>=40);
+    if(!sellable.length) return null;
+    const p=pick(sellable);
+    const offer=Math.round(p.value*ri(110,170)/100);
+    const others=S.divisions[S.userDiv].filter(t=>t!==S.userTeam);
+    if(!others.length) return null;
+    const buyer=pick(others);
+    return {title:"📩 Transfer Bid",text:buyer+" have bid "+money(offer)+" for "+p.name+" (OVR "+p.ovr+").",
+      options:[
+        {label:"Accept ("+money(offer)+")",apply:function(){S.budget+=offer; S.players[S.userTeam]=S.players[S.userTeam].filter(function(x){return x.id!==p.id;}); S.news.unshift("Sold "+p.name+" to "+buyer+" for "+money(offer)+".");}},
+        {label:"Reject",apply:function(){S.morale=clamp(S.morale+2,0,100); S.news.unshift("Rejected "+buyer+"'s bid for "+p.name+". Fans approve.");}}
+      ]};
+  });
+  pool.push(()=>{
+    const grp=roster.filter(p=>p.apps<=1 && p.ovr>=45);
+    if(!grp.length) return null;
+    const p=pick(grp);
+    return {title:"😠 Dressing Room Unrest",text:p.name+" is unhappy about a lack of playing time.",
+      options:[
+        {label:"Reassure & promise minutes",apply:function(){p.form=clamp(p.form+1,-3,3); S.news.unshift("You reassured "+p.name+". The squad settles.");}},
+        {label:"Stand firm",apply:function(){p.form=clamp(p.form-1,-3,3); S.morale=clamp(S.morale-2,0,100); S.news.unshift(p.name+" sulks after being told to be patient.");}}
+      ]};
+  });
+  pool.push(()=>{
+    return {title:"🏛 Board Meeting",text:"The board wants an update on the club's progress this season.",
+      options:[
+        {label:"Confident update",apply:function(){S.reputation=clamp(S.reputation+3,0,100); S.news.unshift("The board is pleased with your confident update.");}},
+        {label:"Cautious update",apply:function(){S.news.unshift("You gave the board a measured, cautious update.");}}
+      ]};
+  });
+  pool.push(()=>{
+    const bonus=Math.round(DIV_SPONSOR[S.userDiv]*ri(5,12)/100);
+    return {title:"🤝 Local Sponsor",text:"A local business wants to sponsor the kit for a one-off fee.",
+      options:[
+        {label:"Accept ("+money(bonus)+")",apply:function(){S.budget+=bonus; S.news.unshift("New sponsor deal brings in "+money(bonus)+".");}},
+        {label:"Decline (protect brand)",apply:function(){S.reputation=clamp(S.reputation+1,0,100); S.news.unshift("You turned down the sponsor to protect the club's image. Fans respect it.");}}
+      ]};
+  });
+  pool.push(()=>{
+    const pos=pick(["CB","CM","ST","GK","LW","RW"]);
+    const tier=clamp(DIV_BASE_TIER[S.userDiv]+ri(0,2),1,5);
+    const cand=newPlayer(pos,tier); cand.age=ri(17,20); cand.pot=clamp(cand.pot+ri(5,15),cand.ovr,95);
+    const fee=Math.round(cand.value*0.6);
+    return {title:"🔎 Scout Tip-Off",text:"Your scouts found a promising "+cand.age+"-year-old "+cand.pos+" ("+cand.name+", OVR "+cand.ovr+", POT "+cand.pot+") available for "+money(fee)+".",
+      options:[
+        {label:"Sign him ("+money(fee)+")",apply:function(){
+          if(S.budget<fee){S.news.unshift("Wanted to sign "+cand.name+" but couldn't afford it."); return;}
+          if(S.players[S.userTeam].length>=SQUAD_CAP){S.news.unshift("Wanted to sign "+cand.name+" but the squad is full."); return;}
+          S.budget-=fee; S.players[S.userTeam].push(cand); S.news.unshift("Signed scouted prospect "+cand.name+" for "+money(fee)+".");
+        }},
+        {label:"Pass",apply:function(){S.news.unshift("Passed on scouted prospect "+cand.name+".");}}
+      ]};
+  });
+  pool.push(()=>{
+    return {title:"🎙 Press Conference",text:"A journalist questions your tactics after recent results.",
+      options:[
+        {label:"Defend your approach",apply:function(){
+          if(Math.random()<0.5){S.reputation=clamp(S.reputation+3,0,100); S.news.unshift("Your confident defense of the tactics goes down well.");}
+          else {S.reputation=clamp(S.reputation-2,0,100); S.news.unshift("Your comments backfire in the press.");}
+        }},
+        {label:"Deflect politely",apply:function(){S.news.unshift("You gave a diplomatic non-answer. Nobody's upset, nobody's impressed.");}}
+      ]};
+  });
+  const candidates=pool.map(f=>f()).filter(Boolean);
+  if(!candidates.length) return;
+  S.pendingEvent=pick(candidates);
+}
+function standingsOf(div){
+  return S.divisions[div].map(t=>({team:t,...S.table[t],gd:S.table[t].gf-S.table[t].ga,pts:S.table[t].pts-S.table[t].ded}))
+    .sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
+}
+function loanCandidates(){
+  const list=[];
+  S.divisions[S.userDiv].forEach(team=>{
+    if(team===S.userTeam) return;
+    const ros=S.players[team].filter(p=>!p.loan).sort((a,b)=>b.ovr-a.ovr);
+    ros.slice(11).forEach(p=>list.push({...p,team}));
+  });
+  return list;
+}
+function enforceSquadCap(team){
+  const ros=S.players[team];
+  if(ros.length<=SQUAD_CAP) return;
+  ros.sort((a,b)=>b.ovr-a.ovr);
+  const released=ros.splice(SQUAD_CAP);
+  if(team===S.userTeam) released.forEach(p=>S.news.unshift("Squad cap ("+SQUAD_CAP+") reached — "+p.name+" released."));
+}
+function youthIntake(){
+  if(!S.userTeam) return;
+  const lvl=S.club.academy;
+  const room=SQUAD_CAP-S.players[S.userTeam].length;
+  if(room<=0){S.news.unshift("🌱 Academy graduates are ready, but the squad is full ("+SQUAD_CAP+") — none could be signed."); return;}
+  const count=Math.min(room,1+Math.floor((lvl-1)/2));
+  const baseTier=clamp(DIV_BASE_TIER[S.userDiv]+Math.floor((lvl-1)/2),1,5);
+  for(let i=0;i<count;i++){
+    const age=ri(15,17);
+    const pos=pick(["GK","CB","LB","RB","CM","CAM","LW","RW","ST"]);
+    const ovr=clamp(24+baseTier*6+ri(-5,5),20,62);
+    const pot=clamp(ovr+ri(6,6+lvl*3),ovr,92);
+    const value=Math.round(Math.pow(ovr,2.15)*24*1.4);
+    const player={name:pick(FIRST)+" "+pick(LAST),pos,age,ovr,pot,value,contract:ri(2,4),
+      goals:0,assists:0,apps:0,careerGoals:0,careerAssists:0,careerApps:0,form:0,injured:0,loan:false,originalTeam:null,id:Math.random().toString(36).slice(2,9)};
+    S.players[S.userTeam].push(player);
+    S.news.unshift("🌱 Youth Intake: "+player.name+" ("+player.pos+", age "+player.age+") joins from the academy — OVR "+player.ovr+", POT "+player.pot+".");
+  }
+}
+const EURO_BONUS={cl:85000,el:42000,ecl:21000};
+function euroZone(divPos){ // Division 1 positions only
+  if(divPos<=4) return "cl";
+  if(divPos<=6) return "el";
+  if(divPos===7) return "ecl";
+  return null;
+}
+function setObjective(){
+  if(S.userDiv==="Division 5") S.objective={type:"promotion",text:"Win promotion out of Division 5 (top "+MOVE_COUNT+")."};
+  else if(S.userDiv==="Division 1") S.objective={type:"europe",text:"Finish top 7 to qualify for Europe, or win the Cup."};
+  else S.objective={type:"promotion",text:"Push for promotion (top "+MOVE_COUNT+") in "+S.userDiv+"."};
+}
+function hofCheck(p,team,note){
+  if(team!==S.userTeam) return;
+  const totalApps=(p.careerApps||0)+p.apps, totalGoals=(p.careerGoals||0)+p.goals, totalAssists=(p.careerAssists||0)+p.assists;
+  if(totalApps>=20){
+    S.hallOfFame.unshift({name:p.name,pos:p.pos,apps:totalApps,goals:totalGoals,assists:totalAssists,season:S.season,note});
+    S.news.unshift("🏛 Hall of Fame: "+p.name+" ("+totalApps+" apps, "+totalGoals+" goals, "+totalAssists+" assists) "+note+".");
+  }
+}
+function devCost(level){return Math.round(150000*Math.pow(1.9,level-1));}
+function endSeason(){
+  const standingsByDiv={}; DIVS.forEach(d=>standingsByDiv[d]=standingsOf(d));
+  const pos=standingsByDiv[S.userDiv].findIndex(r=>r.team===S.userTeam)+1;
+  const n=TEAMS_PER_DIV;
+  const cupWinner=!!(S.cup && S.cup.champion===S.userTeam);
+  const prize=Math.round(DIV_PRIZE_TOP[S.userDiv]*(n-pos+1)/n);
+  S.budget+=prize;
+  S.lastFinance={revenue:S.seasonRevenue,prize,net:S.seasonRevenue+prize,pos};
+  S.news.unshift("Season "+S.season+" finance: revenue "+money(S.seasonRevenue)+", prize "+money(prize)+", net "+money(S.lastFinance.net));
+  let penalty=0;
+  if(S.budget<0){penalty=3; S.news.unshift("⚠ Club in debt ("+money(S.budget)+")! League imposes a 3-point deduction next season.");}
+  S.seasonRevenue=0;
+
+  let euroLabel=null, euroBonus=0;
+  if(S.userDiv==="Division 1"){const z=euroZone(pos); if(z){euroLabel=z; euroBonus=EURO_BONUS[z];}}
+  if(cupWinner && euroLabel!=="cl" && euroLabel!=="el"){euroLabel="ecl"; euroBonus=Math.max(euroBonus,EURO_BONUS.ecl);}
+  if(euroLabel){
+    S.budget+=euroBonus;
+    const names={cl:"Champions League",el:"Europa League",ecl:"Conference League"};
+    S.reputation=clamp(S.reputation+(euroLabel==="cl"?10:euroLabel==="el"?6:3),0,100);
+    S.news.unshift("⭐ Qualified for the "+names[euroLabel]+"! +"+money(euroBonus));
+  }
+  S.lastEuro=euroLabel;
+
+  if(S.objective){
+    let success=S.objective.type==="promotion"?pos<=MOVE_COUNT:(euroZone(pos)!==null||cupWinner);
+    S.reputation=clamp(S.reputation+(success?3:-3),0,100);
+    S.news.unshift("Board objective — "+S.objective.text+" "+(success?"✅ Achieved (+3 rep)":"❌ Missed (-3 rep)"));
+  }
+
+  const moveUp={}, moveDown={};
+  DIVS.forEach((d,i)=>{
+    const st=standingsByDiv[d];
+    if(i>0) moveUp[d]=st.slice(0,MOVE_COUNT).map(r=>r.team);
+    if(i<DIVS.length-1) moveDown[d]=st.slice(-MOVE_COUNT).map(r=>r.team);
+  });
+  DIVS.forEach((d,i)=>{
+    let teams=S.divisions[d].slice();
+    if(moveUp[d]) teams=teams.filter(t=>!moveUp[d].includes(t));
+    if(moveDown[d]) teams=teams.filter(t=>!moveDown[d].includes(t));
+    if(i>0 && moveDown[DIVS[i-1]]) teams=teams.concat(moveDown[DIVS[i-1]]);
+    if(i<DIVS.length-1 && moveUp[DIVS[i+1]]) teams=teams.concat(moveUp[DIVS[i+1]]);
+    S.divisions[d]=teams;
+  });
+  DIVS.forEach(d=>S.divisions[d].forEach(t=>S.teamDiv[t]=d));
+  const newUserDiv=S.teamDiv[S.userTeam];
+  const oldUserDiv=S.userDiv;
+  let promotedFlag=false, relegatedFlag=false;
+  if(newUserDiv!==S.userDiv){
+    promotedFlag=DIVS.indexOf(newUserDiv)<DIVS.indexOf(S.userDiv);
+    relegatedFlag=!promotedFlag;
+    S.news.unshift(promotedFlag?"🏆 PROMOTED to "+newUserDiv+"!":"⬇ RELEGATED to "+newUserDiv+".");
+    S.userDiv=newUserDiv;
+    if(promotedFlag){
+      const boost=Math.round(DIV_SPONSOR[newUserDiv]*0.15);
+      S.budget+=boost; S.news.unshift("Promotion windfall from the league: +"+money(boost));
+    } else {
+      const parachute=Math.round(DIV_SPONSOR[oldUserDiv]*0.1);
+      S.budget+=parachute; S.news.unshift("Parachute payment cushions the drop: +"+money(parachute));
+    }
+  }
+  setObjective();
+  setRival();
+  S.history.push({season:S.season,userDiv:S.userDiv,userPos:pos});
+
+  if(promotedFlag) S.reputation=clamp(S.reputation+15,0,100);
+  else if(relegatedFlag) S.reputation=clamp(S.reputation-20,0,100);
+  else S.reputation=clamp(S.reputation+(pos<=Math.ceil(n/2)?2:-2),0,100);
+
+  if((relegatedFlag && S.budget<0) || S.reputation<=0){
+    S.sacked=true;
+    S.sackReason=(relegatedFlag&&S.budget<0)?"Relegated while the club drowned in debt ("+money(S.budget)+") — the board pulled the trigger.":"Results and boardroom confidence collapsed — you're out.";
+    S.news.unshift("🔴 SACKED: "+S.sackReason);
+  }
+
+  S.players[S.userTeam]=S.players[S.userTeam].filter(p=>{
+    if(p.loan){
+      const home=p.originalTeam;
+      hofCheck(p,S.userTeam,"returns to "+home+" after a loan spell");
+      if(S.players[home]){const clean={...p}; clean.loan=false; clean.originalTeam=null; S.players[home].push(clean);}
+      S.news.unshift(p.name+" returns to "+home+" after his loan spell.");
+      return false;
+    }
+    return true;
+  });
+  S.freeAgents=freshFreeAgents();
+
+  Object.entries(S.players).forEach(([team,ros])=>{
+    for(let i=ros.length-1;i>=0;i--){
+      const p=ros[i]; p.age++;
+      if(p.age>=38 || (p.age>=34 && Math.random()<0.25)){
+        if(team===S.userTeam){
+          hofCheck(p,team,"retires a club legend");
+          S.news.unshift("👋 "+p.name+" ("+p.age+", "+p.pos+") retires from professional football after a long career.");
+        }
+        ros.splice(i,1); continue;
+      }
+      const growthBonus=(team===S.userTeam)?Math.round(S.club.training*0.6):0;
+      if(p.age<27) p.ovr=clamp(p.ovr+ri(0,3)+growthBonus,p.ovr,p.pot);
+      else if(p.age>30) p.ovr=clamp(p.ovr-ri(0,2),30,99);
+      p.contract--; p.injured=0;
+      if(p.contract<=0){p.contract=ri(1,3);}
+    }
+  });
+  Object.keys(S.players).forEach(team=>{
+    if(team===S.userTeam) return;
+    const tier=clamp(DIV_BASE_TIER[S.teamDiv[team]],1,5);
+    while(S.players[team].length<18) S.players[team].push(newPlayer(pick(["CB","CM","ST","GK","LW"]),tier));
+  });
+  youthIntake();
+  while(S.players[S.userTeam].length<16) S.players[S.userTeam].push(newPlayer(pick(["CB","CM","ST","GK","LW"]),DIV_BASE_TIER[S.userDiv]));
+
+  const scorersArr=[]; Object.entries(S.players).forEach(([team,ros])=>ros.forEach(pl=>{if(pl.goals>0) scorersArr.push({name:pl.name,team,goals:pl.goals});}));
+  scorersArr.sort((a,b)=>b.goals-a.goals);
+  if(scorersArr.length){
+    const top=scorersArr[0];
+    S.news.unshift("🥇 Golden Boot: "+top.name+" ("+top.team+") with "+top.goals+" goals.");
+    if(top.team===S.userTeam) S.reputation=clamp(S.reputation+3,0,100);
+  }
+  const allPlayers=[]; Object.entries(S.players).forEach(([team,ros])=>ros.forEach(pl=>allPlayers.push({name:pl.name,team,ovr:pl.ovr})));
+  allPlayers.sort((a,b)=>b.ovr-a.ovr);
+  if(allPlayers.length){
+    const potm=allPlayers[0];
+    S.news.unshift("⭐ Player of the Season: "+potm.name+" ("+potm.team+", OVR "+potm.ovr+").");
+  }
+
+  Object.values(S.players).forEach(ros=>ros.forEach(p=>{p.careerGoals=(p.careerGoals||0)+p.goals; p.careerAssists=(p.careerAssists||0)+p.assists; p.careerApps=(p.careerApps||0)+p.apps; p.goals=0;p.assists=0;p.apps=0;p.form=0;}));
+
+  Object.keys(S.table).forEach(t=>S.table[t]={p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0,ded:t===S.userTeam?penalty:0});
+  euroStartSeason(standingsByDiv["Division 1"],S.cup&&S.cup.champion);
+  regenerateFixtures();
+  cupStartSeason();
+  S.season++;
+  save();
+}
+function upgrade(kind){
+  const lvl=S.club[kind];
+  if(lvl>=5) return;
+  const cost=devCost(lvl+1);
+  if(S.budget<cost){alert("Not enough budget: need "+money(cost));return;}
+  S.budget-=cost; S.club[kind]=lvl+1;
+  S.news.unshift("Invested "+money(cost)+" in "+kind+" (now level "+(lvl+1)+").");
+  save();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));return true;}catch(e){return false;}}
+function load(){try{const raw=localStorage.getItem(KEY); if(!raw)return false; S=JSON.parse(raw); return true;}catch(e){return false;}}
+
+const TABS=["Dashboard","Table","Fixtures","Squad","Tactics","Transfers","Cups","Legends","Club","News"];
+let active="Dashboard", tableDiv=null;
+function el(tag,cls,html){const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;}
+function fmtTag(pos){const cat=CATS[pos]||pos.toLowerCase(); return '<span class="tag '+cat+'">'+pos+'</span>';}
+
+const TAB_ICON={Dashboard:"🏠",Table:"📊",Fixtures:"📅",Squad:"👥",Tactics:"🧠",Transfers:"💰",Cups:"🏆",Legends:"⭐",Club:"🏛",News:"📰"};
+function renderNav(){
+  const nav=document.getElementById("nav"); nav.innerHTML="";
+  TABS.forEach(t=>{
+    const b=el("button",t===active?"on":"",(TAB_ICON[t]||"")+" "+t);
+    b.onclick=()=>{active=t; renderAll();};
+    nav.appendChild(b);
+  });
+}
+function renderHeader(){
+  document.getElementById("hSeason").textContent=S.season;
+  document.getElementById("hMD").textContent=S.matchday;
+  document.getElementById("hMDmax").textContent=S.maxMD;
+  document.getElementById("hClub").textContent=S.userTeam||"-";
+  document.getElementById("hDiv").textContent=S.userDiv||"-";
+  const b=document.getElementById("hBudget");
+  b.textContent=S.userTeam?money(S.budget):"-";
+  b.className=S.budget<0?"warn":(S.budget>0?"good":"");
+  const rp=document.getElementById("hRep");
+  rp.textContent=S.userTeam?S.reputation:"-";
+  rp.className=S.userTeam?(S.reputation>=70?"good":(S.reputation<=25?"warn":"")):"";
+  const mo=document.getElementById("hMorale");
+  mo.textContent=S.userTeam?S.morale:"-";
+  mo.className=S.userTeam?(S.morale>=70?"good":(S.morale<=25?"warn":"")):"";
+}
+function renderDashboard(m){
+  if(S.sacked){
+    const p=el("div","panel");
+    p.innerHTML="<h2>🔴 You've Been Sacked</h2><p>"+S.sackReason+"</p><p class='muted'>Career over. Start a new one to try again.</p>";
+    const btn=el("button","act","Start New Career");
+    btn.onclick=()=>{localStorage.removeItem(KEY); newWorld(); active="Dashboard"; save(); renderAll();};
+    p.appendChild(btn); m.appendChild(p); return;
+  }
+  if(!S.userTeam){
+    m.appendChild(el("div","panel","<h2>Choose your Division 5 club</h2><p class='muted'>You start at the bottom of a five-tier pyramid with a small budget and a weak squad. Win promotion, avoid the sack.</p>"));
+    const wrap=el("div","panel"); const grid=el("div","row");
+    S.divisions["Division 5"].forEach(t=>{
+      const s=squadStrength(t,"balanced");
+      const btn=el("button","sub",t+" <span class='muted'>(avg "+Math.round((s.atk+s.def)/2)+")</span>");
+      btn.onclick=()=>{S.userTeam=t; S.userDiv="Division 5"; S.budget=120000; setFormation("4-4-2"); autoFillXI(); setObjective(); setRival(); save(); renderAll();};
+      grid.appendChild(btn);
+    });
+    wrap.appendChild(grid); m.appendChild(wrap);
+    return;
+  }
+  const p=el("div","panel");
+  const st=standingsOf(S.userDiv); const pos=st.findIndex(r=>r.team===S.userTeam)+1;
+  const nextFix=(S.fixturesByDiv[S.userDiv][S.matchday]||[]).find(f=>f.includes(S.userTeam));
+  p.innerHTML='<div class="grid3">'+
+    '<div class="stat"><div class="muted">📶 '+S.userDiv+'</div><div class="big">#'+(pos||"-")+' / '+TEAMS_PER_DIV+'</div></div>'+
+    '<div class="stat"><div class="muted">💰 Budget</div><div class="big" style="'+(S.budget<0?'color:var(--red)':'color:var(--green)')+'">'+money(S.budget)+'</div></div>'+
+    '<div class="stat"><div class="muted">⚽ Next fixture</div><div class="big" style="font-size:14.5px">'+(nextFix?(nextFix[0]+" vs "+nextFix[1]):(S.matchday>=S.maxMD?"Season complete":"-"))+'</div></div>'+
+    '<div class="stat"><div class="muted">👥 Squad size</div><div class="big">'+S.players[S.userTeam].length+' / '+SQUAD_CAP+'</div></div>'+
+    '<div class="stat"><div class="muted">📋 Reputation</div><div class="big" style="'+(S.reputation<=25?'color:var(--red)':'')+'">'+S.reputation+'/100</div></div>'+
+    '<div class="stat"><div class="muted">🙂 Morale</div><div class="big" style="'+(S.morale<=25?'color:var(--red)':'')+'">'+S.morale+'/100</div></div>'+
+    '</div>';
+  m.appendChild(p);
+  if(S.rival){
+    m.appendChild(el("div","panel","🔥 <b>Rivalry:</b> "+S.rival+" — matches against them hit morale and reputation harder."));
+  }
+  if(S.objective){
+    m.appendChild(el("div","panel","<b>Board objective:</b> "+S.objective.text));
+  }
+  if(S.pendingEvent){
+    const ev=S.pendingEvent;
+    const evp=el("div","panel");
+    evp.style.borderColor="var(--gold-dim)";
+    evp.innerHTML="<h2>"+ev.title+"</h2><p>"+ev.text+"</p>";
+    const row=el("div","row");
+    ev.options.forEach(opt=>{
+      const b=el("button","act",opt.label);
+      b.onclick=()=>{opt.apply(); S.pendingEvent=null; save(); renderAll();};
+      row.appendChild(b);
+    });
+    evp.appendChild(row);
+    m.appendChild(evp);
+  }
+  const actions=el("div","panel row");
+  const canPlay=S.matchday<S.maxMD && !S.pendingEvent;
+  const b1=el("button","act",S.pendingEvent?"Resolve the event above first":(S.matchday<S.maxMD?"Simulate Matchday":"Season Finished"));
+  b1.disabled=!canPlay;
+  b1.onclick=()=>{simMatchday(); save(); renderAll();};
+  const b2=el("button","sub",S.matchday<S.maxMD?"Simulate Whole Season":"Season Finished");
+  b2.disabled=S.matchday>=S.maxMD;
+  b2.onclick=()=>{
+    while(S.matchday<S.maxMD){
+      simMatchday();
+      while(S.pendingEvent){ pick(S.pendingEvent.options).apply(); S.pendingEvent=null; }
+    }
+    save(); renderAll();
+  };
+  const b3=el("button","sub",S.matchday<S.maxMD?"End season disabled (matches remain)":"End Season & Advance");
+  b3.disabled=S.matchday<S.maxMD;
+  b3.onclick=()=>{endSeason(); renderAll();};
+  actions.append(b1,b2,b3);
+  m.appendChild(actions);
+  m.appendChild(el("p","muted","'Simulate Whole Season' auto-resolves any events that come up so it never stops partway."));
+  if(S.budget<0){
+    m.appendChild(el("div","panel","<b style='color:var(--red)'>Financial warning:</b> <span class='muted'>you are in debt. If the season ends this way you'll be points-docked, and a relegation while in debt risks the sack.</span>"));
+  }
+  if(S.lastMatchReport){
+    const r=S.lastMatchReport;
+    const rp=el("div","panel");
+    rp.innerHTML="<h3>Match Report — MD"+r.md+" ("+r.div+")</h3><div class='big' style='font-size:18px'>"+r.home+" "+r.hg+"-"+r.ag+" "+r.away+"</div>";
+    const list=el("ul","mreport");
+    r.events.forEach(e=>list.appendChild(el("li",null,e.min+"' "+e.text)));
+    rp.appendChild(list); m.appendChild(rp);
+  }
+  const news=el("div","panel");
+  news.innerHTML="<h3>Latest news</h3>"+(S.news.length?"<ul class='news'>"+S.news.slice(0,6).map(n=>"<li>"+n+"</li>").join("")+"</ul>":"<p class='muted'>Nothing yet — play a matchday.</p>");
+  m.appendChild(news);
+}
+function renderTable(m){
+  if(!tableDiv) tableDiv=S.userDiv||"Division 1";
+  const p=el("div","panel scroll");
+  const sel=el("select");
+  DIVS.forEach(d=>{const o=el("option",null,d); o.value=d; if(d===tableDiv)o.selected=true; sel.appendChild(o);});
+  sel.onchange=()=>{tableDiv=sel.value; renderAll();};
+  const head=el("div","row"); head.append(el("h2",null,"League Table — Season "+S.season+" "),sel);
+  p.appendChild(head);
+  const st=standingsOf(tableDiv);
+  const tbl=el("table",null,"<tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>");
+  st.forEach((r,i)=>{
+    let band="";
+    if(tableDiv==="Division 1"){ const z=euroZone(i+1); if(z==="cl")band="cl"; else if(z==="el")band="el"; else if(z==="ecl")band="ecl"; else if(i>=TEAMS_PER_DIV-MOVE_COUNT) band="rel"; }
+    else band=(i<MOVE_COUNT?"promo":(i>=TEAMS_PER_DIV-MOVE_COUNT?"rel":""));
+    const cls=(r.team===S.userTeam?"me ":"")+band;
+    tbl.appendChild(el("tr",cls,"<td>"+(i+1)+"</td><td>"+r.team+"</td><td>"+r.p+"</td><td>"+r.w+"</td><td>"+r.d+"</td><td>"+r.l+"</td><td>"+r.gf+"</td><td>"+r.ga+"</td><td>"+r.gd+"</td><td><b>"+r.pts+"</b>"+(r.ded?" <span class='muted'>(-"+r.ded+")</span>":"")+"</td>"));
+  });
+  p.appendChild(tbl);
+  p.appendChild(el("p","muted",tableDiv==="Division 1"?"Gold = Champions League (top 4), teal = Europa League (5-6), purple = Conference League (7). Red edge = relegation (bottom "+MOVE_COUNT+"). The Cup winner also earns a Conference League place if not already qualified higher.":"Green edge = promotion places (top "+MOVE_COUNT+"), red edge = relegation places (bottom "+MOVE_COUNT+")."));
+  m.appendChild(p);
+}
+function renderFixtures(m){
+  if(!S.userTeam){m.appendChild(el("div","panel","Pick a club on the Dashboard first."));return;}
+  const p=el("div","panel scroll");
+  let rows="";
+  S.fixturesByDiv[S.userDiv].forEach((day,i)=>{
+    const mine=day.find(f=>f.includes(S.userTeam));
+    if(mine) rows+="<tr><td>MD"+(i+1)+"</td><td>"+mine[0]+"</td><td>vs</td><td>"+mine[1]+"</td><td>"+(i<S.matchday?"<span class='muted'>played</span>":"")+"</td></tr>";
+  });
+  p.innerHTML="<h2>Fixtures ("+S.userTeam+", "+S.userDiv+")</h2><table>"+rows+"</table>";
+  m.appendChild(p);
+}
+function renderSquad(m){
+  if(!S.userTeam){m.appendChild(el("div","panel","Pick a club on the Dashboard first."));return;}
+  const roster=S.players[S.userTeam].slice().sort((a,b)=>b.ovr-a.ovr);
+  const p=el("div","panel scroll");
+  p.innerHTML="<h2>"+S.userTeam+" Squad</h2><p class='muted'>Season stats reset at the end of each season (career totals carry on).</p><table><tr><th>Name</th><th>Pos</th><th>Age</th><th>OVR</th><th>POT</th><th>Form</th><th>G</th><th>A</th><th>Apps</th><th>Career G/A/Apps</th><th>Value</th><th>Contract</th><th></th></tr></table>";
+  const tbl=p.querySelector("table");
+  roster.forEach(pl=>{
+    const status=pl.injured>0?" <span style='color:var(--red)'>INJ("+pl.injured+")</span>":(pl.loan?" <span class='muted'>(loan)</span>":"");
+    const tr=el("tr","","<td>"+pl.name+status+"</td><td>"+fmtTag(pl.pos)+"</td><td>"+pl.age+"</td><td>"+pl.ovr+"</td><td>"+pl.pot+"</td><td>"+(pl.form>0?"+":"")+pl.form+"</td><td>"+pl.goals+"</td><td>"+pl.assists+"</td><td>"+pl.apps+"</td><td class='muted'>"+(pl.careerGoals||0)+"/"+(pl.careerAssists||0)+"/"+(pl.careerApps||0)+"</td><td>"+money(pl.value)+"</td><td>"+pl.contract+"y</td>");
+    const td=el("td");
+    const btn=el("button","sub","Sell");
+    btn.onclick=()=>{
+      if(roster.length<=14){alert("Squad too small to sell further.");return;}
+      hofCheck(pl,S.userTeam,"departs after a transfer");
+      S.budget+=Math.round(pl.value*0.85);
+      S.players[S.userTeam]=S.players[S.userTeam].filter(x=>x.id!==pl.id);
+      S.news.unshift("Sold "+pl.name+" for "+money(Math.round(pl.value*0.85)));
+      save(); renderAll();
+    };
+    td.appendChild(btn); tr.appendChild(td); tbl.appendChild(tr);
+  });
+  m.appendChild(p);
+}
+function renderTactics(m){
+  if(!S.userTeam){m.appendChild(el("div","panel","Pick a club on the Dashboard first."));return;}
+  const p=el("div","panel");
+  p.innerHTML="<h2>Tactics</h2><p class='muted'>Sets your team's mentality for every match until changed.</p>";
+  const row=el("div","row");
+  ["defensive","balanced","attacking"].forEach(t=>{
+    const b=el("button",t===S.tactic?"act":"sub",t[0].toUpperCase()+t.slice(1));
+    b.onclick=()=>{S.tactic=t; save(); renderAll();};
+    row.appendChild(b);
+  });
+  p.appendChild(row);
+  const s=squadStrength(S.userTeam,S.tactic);
+  const info=el("div","panel");
+  info.innerHTML='<div class="grid2"><div class="stat"><div class="muted">⚔ Attack rating</div><div class="big">'+s.atk.toFixed(1)+'</div></div><div class="stat"><div class="muted">🛡 Defense rating</div><div class="big">'+s.def.toFixed(1)+'</div></div></div>';
+  m.append(p,info);
+
+  if(!S.lineup) setFormation("4-4-2");
+  const wrap=el("div","panel");
+  wrap.innerHTML="<h2>Starting XI</h2><p class='muted'>Pick a formation and starting XI. Injured players can't be picked. An incomplete or invalid XI falls back to auto-selecting your best available players.</p>";
+  const fRow=el("div","row");
+  Object.keys(FORMATIONS).forEach(k=>{
+    const b=el("button",S.lineup.formation===k?"act":"sub",k);
+    b.onclick=()=>{setFormation(k); renderAll();};
+    fRow.appendChild(b);
+  });
+  wrap.appendChild(fRow);
+  const auto=el("button","sub","Auto-fill Best XI"); auto.style.marginTop="8px";
+  auto.onclick=()=>{autoFillXI(); renderAll();};
+  wrap.appendChild(auto);
+  const cats=FORMATIONS[S.lineup.formation];
+  const used=new Set(S.lineup.slots.filter(Boolean));
+  const grid=el("div","panel");
+  cats.forEach((cat,i)=>{
+    const row2=el("div","slot");
+    row2.appendChild(el("span",null,fmtTag(cat.toUpperCase())+" Slot "+(i+1)));
+    const sel=el("select");
+    const empty=el("option",null,"— empty —"); empty.value=""; sel.appendChild(empty);
+    S.players[S.userTeam].filter(pp=>CATS[pp.pos]===cat && !(pp.injured>0)).forEach(pp=>{
+      if(used.has(pp.id) && pp.id!==S.lineup.slots[i]) return;
+      const o=el("option",null,pp.name+" ("+pp.ovr+")"); o.value=pp.id; if(S.lineup.slots[i]===pp.id) o.selected=true; sel.appendChild(o);
+    });
+    sel.onchange=()=>{S.lineup.slots[i]=sel.value; save(); renderAll();};
+    row2.appendChild(sel);
+    grid.appendChild(row2);
+  });
+  wrap.appendChild(grid);
+  wrap.appendChild(el("p","muted",lineupValid()?"✅ Full valid XI selected — used in your matches.":"⚠ Incomplete/invalid XI — auto-best-XI will be used instead."));
+  m.appendChild(wrap);
+}
+function renderTransfers(m){
+  if(!S.userTeam){m.appendChild(el("div","panel","Pick a club on the Dashboard first."));return;}
+  const p=el("div","panel scroll");
+  p.innerHTML="<h2>Transfer Market — "+S.userDiv+"</h2><p class='muted'>Scouted to your own division only. Budget: <b>"+money(S.budget)+"</b></p><table><tr><th>Name</th><th>Team</th><th>Pos</th><th>Age</th><th>OVR</th><th>Fee</th><th></th></tr></table>";
+  const tbl=p.querySelector("table");
+  const avail=[];
+  S.divisions[S.userDiv].forEach(team=>{
+    if(team===S.userTeam) return;
+    S.players[team].forEach(pl=>{if(!pl.loan) avail.push({...pl,team});});
+  });
+  avail.sort((a,b)=>b.ovr-a.ovr);
+  let list=avail.slice(0,30);
+  if(S.club.scouting>1){
+    const bargains=shuffle(avail.slice(30)).slice(0,S.club.scouting).map(pl=>({...pl,value:Math.round(pl.value*0.7),bargain:true}));
+    list=list.concat(bargains);
+  }
+  list.forEach(pl=>{
+    const tr=el("tr","","<td>"+pl.name+(pl.bargain?" <span class='muted'>(scout find)</span>":"")+"</td><td>"+pl.team+"</td><td>"+fmtTag(pl.pos)+"</td><td>"+pl.age+"</td><td>"+pl.ovr+"</td><td>"+money(pl.value)+"</td>");
+    const td=el("td"); const btn=el("button","sub","Buy");
+    btn.onclick=()=>{
+      if(S.budget<pl.value){alert("Not enough budget.");return;}
+      if(S.players[S.userTeam].length>=SQUAD_CAP){alert("Squad is full ("+SQUAD_CAP+" max).");return;}
+      const stillThere=S.players[pl.team]&&S.players[pl.team].find(x=>x.id===pl.id);
+      if(!stillThere){alert("That player is no longer available.");return;}
+      S.budget-=pl.value;
+      S.players[pl.team]=S.players[pl.team].filter(x=>x.id!==pl.id);
+      const clean={...pl}; delete clean.team; delete clean.bargain; clean.loan=false; clean.originalTeam=null;
+      S.players[S.userTeam].push(clean);
+      S.news.unshift("Signed "+pl.name+" from "+pl.team+" for "+money(pl.value)+" — permanently yours.");
+      save(); renderAll();
+    };
+    td.appendChild(btn); tr.appendChild(td); tbl.appendChild(tr);
+  });
+  m.appendChild(p);
+
+  const fa=el("div","panel scroll");
+  fa.innerHTML="<h3>Free Agents</h3><p class='muted'>No transfer fee — sign them outright, permanently.</p><table><tr><th>Name</th><th>Pos</th><th>Age</th><th>OVR</th><th>Value</th><th></th></tr></table>";
+  const fatbl=fa.querySelector("table");
+  S.freeAgents.forEach(pl=>{
+    const tr=el("tr","","<td>"+pl.name+"</td><td>"+fmtTag(pl.pos)+"</td><td>"+pl.age+"</td><td>"+pl.ovr+"</td><td>"+money(pl.value)+"</td>");
+    const td=el("td"); const btn=el("button","sub","Sign Free");
+    btn.onclick=()=>{
+      if(S.players[S.userTeam].length>=SQUAD_CAP){alert("Squad full.");return;}
+      S.players[S.userTeam].push({...pl,loan:false,originalTeam:null});
+      S.freeAgents=S.freeAgents.filter(x=>x.id!==pl.id);
+      S.news.unshift("Signed free agent "+pl.name+" — permanently yours.");
+      save(); renderAll();
+    };
+    td.appendChild(btn); tr.appendChild(td); fatbl.appendChild(tr);
+  });
+  m.appendChild(fa);
+
+  const lp=el("div","panel scroll");
+  lp.innerHTML="<h3>Loan Market ("+S.userDiv+")</h3><p class='muted'>One-off loan fee; player returns to parent club at season end.</p><table><tr><th>Name</th><th>Team</th><th>Pos</th><th>Age</th><th>OVR</th><th>Fee</th><th></th></tr></table>";
+  const ltbl=lp.querySelector("table");
+  loanCandidates().slice(0,20).forEach(pl=>{
+    const fee=Math.round(pl.value*0.15);
+    const tr=el("tr","","<td>"+pl.name+"</td><td>"+pl.team+"</td><td>"+fmtTag(pl.pos)+"</td><td>"+pl.age+"</td><td>"+pl.ovr+"</td><td>"+money(fee)+"</td>");
+    const td=el("td"); const btn=el("button","sub","Loan");
+    btn.onclick=()=>{
+      if(S.budget<fee){alert("Not enough budget.");return;}
+      if(S.players[S.userTeam].length>=SQUAD_CAP){alert("Squad full.");return;}
+      const orig=S.players[pl.team]&&S.players[pl.team].find(x=>x.id===pl.id);
+      if(!orig){alert("Player unavailable.");return;}
+      S.budget-=fee;
+      S.players[pl.team]=S.players[pl.team].filter(x=>x.id!==pl.id);
+      S.players[S.userTeam].push({...orig,loan:true,originalTeam:pl.team});
+      S.news.unshift("Loaned in "+pl.name+" from "+pl.team+" for "+money(fee)+".");
+      save(); renderAll();
+    };
+    td.appendChild(btn); tr.appendChild(td); ltbl.appendChild(tr);
+  });
+  m.appendChild(lp);
+}
+function renderKnockoutPanel(m,title,comp,simFn,desc){
+  const p=el("div","panel");
+  if(!comp){
+    p.innerHTML="<h2>"+title+"</h2>"+(desc?"<p class='muted'>"+desc+"</p>":"");
+    m.appendChild(p); return;
+  }
+  if(comp.champion){
+    p.innerHTML="<h2>"+title+" — Season "+S.season+"</h2><p class='big'>🏆 Champion: "+comp.champion+(comp.champion===S.userTeam?" — that's you!":"")+"</p>";
+    m.appendChild(p); return;
+  }
+  const myPair=comp.fixtures.find(pr=>pr.includes(S.userTeam));
+  let statusText;
+  if(myPair) statusText=myPair.length===1?(S.userTeam+" (bye)"):(myPair[0]+" vs "+myPair[1]);
+  else if(comp.teams.includes(S.userTeam)) statusText="waiting for fixtures";
+  else if(comp.round===1) statusText="Not part of the "+title+" this season.";
+  else statusText="Eliminated from the "+title+".";
+  p.innerHTML="<h2>"+title+" — "+comp.roundName+"</h2>"+(desc?"<p class='muted'>"+desc+"</p>":"")+
+    "<p class='big' style='font-size:16px'>"+statusText+"</p>";
+  const btn=el("button","act","Simulate "+title+" Round");
+  btn.onclick=()=>{simFn(); save(); renderAll();};
+  p.appendChild(btn);
+  m.appendChild(p);
+  if(comp.lastRoundLog&&comp.lastRoundLog.length){
+    const lp=el("div","panel scroll");
+    lp.innerHTML="<h3>Last Round Results</h3><ul class='news'>"+comp.lastRoundLog.map(l=>"<li>"+l+"</li>").join("")+"</ul>";
+    m.appendChild(lp);
+  }
+  const rem=el("div","panel scroll");
+  rem.innerHTML="<h3>Teams Remaining ("+comp.teams.length+")</h3><p class='muted'>"+comp.teams.join(", ")+"</p>";
+  m.appendChild(rem);
+}
+function renderCup(m){
+  if(!S.userTeam){m.appendChild(el("div","panel","Pick a club on the Dashboard first."));return;}
+  renderKnockoutPanel(m,"Fen Valley Cup",S.cup,simCupRound,"Open knockout across all "+(TEAMS_PER_DIV*DIVS.length)+" clubs in every division. Odd numbers get a random bye.");
+  if(S.euro){
+    renderKnockoutPanel(m,"Champions League",S.euro.cl,()=>simEuroRound("cl"),"Division 1's top 4 finishers from last season.");
+    renderKnockoutPanel(m,"Europa League",S.euro.el,()=>simEuroRound("el"),"Division 1's 5th & 6th place finishers from last season.");
+    renderKnockoutPanel(m,"Conference League",S.euro.ecl,()=>simEuroRound("ecl"),"Division 1's 7th place finisher, plus the Cup winner if not already qualified higher.");
+  } else {
+    m.appendChild(el("div","panel","<h2>European Competitions</h2><p class='muted'>Champions League, Europa League and Conference League places are decided by Division 1's final table each season. They'll open up once Season 1 ends.</p>"));
+  }
+}
+const DEV_INFO={
+  stadium:["Stadium","Boosts sponsorship & matchday income every season."],
+  academy:["Youth Academy","Produces a Youth Intake of new prospects each season — more of them, and better potential, at higher levels."],
+  scouting:["Scouting Network","Surfaces extra under-priced bargain signings in the transfer market."],
+  training:["Training Facilities","Speeds up development of your players under 27."],
+  medical:["Medical Staff","Cuts your players' injury risk and shortens recovery time when they do get hurt."],
+  spirit:["Team Spirit Coach","Recovers squad morale faster after results, and softens the hit from a loss."]
+};
+function allPlayersFlat(){
+  const out=[];
+  Object.entries(S.players).forEach(([team,ros])=>ros.forEach(pl=>out.push({...pl,team})));
+  return out;
+}
+function renderLegends(m){
+  const all=allPlayersFlat();
+  const scorers=all.filter(p=>p.goals>0).sort((a,b)=>b.goals-a.goals).slice(0,10);
+  const assisters=all.filter(p=>p.assists>0).sort((a,b)=>b.assists-a.assists).slice(0,10);
+  const ratioBoard=all.filter(p=>p.apps>=10).map(p=>({...p,ratio:(p.goals+p.assists)/p.apps})).sort((a,b)=>b.ratio-a.ratio).slice(0,10);
+
+  const sp=el("div","panel scroll");
+  sp.innerHTML="<h2>Top Scorers — Season "+S.season+"</h2>"+(scorers.length?"<table><tr><th>#</th><th>Player</th><th>Team</th><th>Goals</th><th>Apps</th><th>G/Game</th></tr>"+
+    scorers.map((s,i)=>"<tr"+(s.team===S.userTeam?" class='me'":"")+"><td>"+(i+1)+"</td><td>"+s.name+"</td><td>"+s.team+"</td><td><b>"+s.goals+"</b></td><td>"+s.apps+"</td><td>"+(s.apps?(s.goals/s.apps).toFixed(2):"-")+"</td></tr>").join("")+"</table>":"<p class='muted'>No goals scored yet this season.</p>");
+  m.appendChild(sp);
+
+  const ap=el("div","panel scroll");
+  ap.innerHTML="<h2>Top Assisters — Season "+S.season+"</h2>"+(assisters.length?"<table><tr><th>#</th><th>Player</th><th>Team</th><th>Assists</th><th>Apps</th><th>A/Game</th></tr>"+
+    assisters.map((s,i)=>"<tr"+(s.team===S.userTeam?" class='me'":"")+"><td>"+(i+1)+"</td><td>"+s.name+"</td><td>"+s.team+"</td><td><b>"+s.assists+"</b></td><td>"+s.apps+"</td><td>"+(s.apps?(s.assists/s.apps).toFixed(2):"-")+"</td></tr>").join("")+"</table>":"<p class='muted'>No assists yet this season.</p>");
+  m.appendChild(ap);
+
+  const rp=el("div","panel scroll");
+  rp.innerHTML="<h2>Best Goal Involvement Ratio</h2><p class='muted'>Goals + assists per game played (min. 10 appearances).</p>"+(ratioBoard.length?"<table><tr><th>#</th><th>Player</th><th>Team</th><th>G</th><th>A</th><th>Apps</th><th>Ratio</th></tr>"+
+    ratioBoard.map((s,i)=>"<tr"+(s.team===S.userTeam?" class='me'":"")+"><td>"+(i+1)+"</td><td>"+s.name+"</td><td>"+s.team+"</td><td>"+s.goals+"</td><td>"+s.assists+"</td><td>"+s.apps+"</td><td><b>"+s.ratio.toFixed(2)+"</b></td></tr>").join("")+"</table>":"<p class='muted'>Not enough matches played yet.</p>");
+  m.appendChild(rp);
+
+  const hp=el("div","panel scroll");
+  hp.innerHTML="<h2>"+ (S.userTeam||"Your Club") +" Hall of Fame</h2><p class='muted'>Club legends — players who left with 20+ appearances for you.</p>"+
+    (S.hallOfFame.length?"<table><tr><th>Name</th><th>Pos</th><th>Apps</th><th>Goals</th><th>Assists</th><th>Season</th><th>How</th></tr>"+
+      S.hallOfFame.map(h=>"<tr><td>"+h.name+"</td><td>"+fmtTag(h.pos)+"</td><td>"+h.apps+"</td><td>"+h.goals+"</td><td>"+h.assists+"</td><td>"+h.season+"</td><td class='muted'>"+h.note+"</td></tr>").join("")+"</table>":"<p class='muted'>No legends yet — give a player 20+ appearances before they leave the club.</p>");
+  m.appendChild(hp);
+}
+function renderClub(m){
+  if(!S.userTeam){m.appendChild(el("div","panel","Pick a club on the Dashboard first."));return;}
+  const p=el("div","panel");
+  p.innerHTML="<h2>Club Development</h2><p class='muted'>Long-term investments. Costs rise sharply each level (max level 5).</p>";
+  Object.keys(DEV_INFO).forEach(k=>{
+    const label=DEV_INFO[k][0], desc=DEV_INFO[k][1];
+    const lvl=S.club[k];
+    const card=el("div","devcard");
+    const cost=lvl<5?devCost(lvl+1):null;
+    card.innerHTML="<div class='row' style='justify-content:space-between'><b>"+label+"</b><span class='muted'>Level "+lvl+"/5</span></div><div class='bar'><i style='width:"+(lvl/5*100)+"%'></i></div><div class='muted' style='font-size:12px'>"+desc+"</div>";
+    const btn=el("button","act",lvl>=5?"Maxed":"Upgrade ("+money(cost)+")");
+    btn.style.marginTop="6px";
+    btn.disabled=lvl>=5||S.budget<cost;
+    btn.onclick=()=>{upgrade(k); renderAll();};
+    card.appendChild(btn);
+    p.appendChild(card);
+  });
+  m.appendChild(p);
+  const running=el("div","panel");
+  running.innerHTML="<h3>This Season So Far</h3><div class='grid2'><div class='stat'><div class='muted'>💵 Matchday revenue</div><div class='big'>"+money(S.seasonRevenue)+"</div></div></div><p class='muted'>Home matches earn revenue based on your Stadium level. There are no player wages — your only costs are transfer fees, loan fees, and club investments.</p>";
+  m.appendChild(running);
+  if(S.lastFinance){
+    const f=S.lastFinance;
+    const fp=el("div","panel");
+    fp.innerHTML="<h3>Last Season Finances</h3><div class='grid3'><div class='stat'><div class='muted'>🏁 Finish</div><div class='big'>#"+f.pos+"</div></div><div class='stat'><div class='muted'>🏆 Prize money</div><div class='big'>"+money(f.prize)+"</div></div><div class='stat'><div class='muted'>💵 Revenue</div><div class='big'>"+money(f.revenue)+"</div></div></div><p class='muted'>Net: <b style='color:"+(f.net>=0?"var(--green)":"var(--red)")+"'>"+money(f.net)+"</b></p>";
+    m.appendChild(fp);
+  }
+  const ideas=el("div","panel");
+  ideas.innerHTML="<h3>Ideas for next time</h3><ul class='news'><li>Mid-match substitutions and tactical changes</li><li>Rival club rivalries and derby atmosphere bonuses</li><li>Multi-season save slots</li></ul>";
+  m.appendChild(ideas);
+}
+function renderNews(m){
+  const p=el("div","panel");
+  p.innerHTML="<h2>News Feed</h2>"+(S.news.length?"<ul class='news'>"+S.news.map(n=>"<li>"+n+"</li>").join("")+"</ul>":"<p class='muted'>No news yet.</p>");
+  m.appendChild(p);
+  if(S.history.length){
+    const h=el("div","panel scroll");
+    h.innerHTML="<h3>Career History</h3><table><tr><th>Season</th><th>Division</th><th>Finish</th></tr>"+
+      S.history.map(s=>"<tr><td>"+s.season+"</td><td>"+s.userDiv+"</td><td>#"+s.userPos+"</td></tr>").join("")+"</table>";
+    m.appendChild(h);
+  }
+}
+function renderAll(){
+  if(S.sacked) active="Dashboard";
+  renderNav(); renderHeader();
+  const m=document.getElementById("main"); m.innerHTML="";
+  ({Dashboard:renderDashboard,Table:renderTable,Fixtures:renderFixtures,Squad:renderSquad,
+    Tactics:renderTactics,Transfers:renderTransfers,Cups:renderCup,Legends:renderLegends,Club:renderClub,News:renderNews})[active](m);
+  const reset=el("div","row",""); reset.style.marginTop="8px";
+  const rb=el("button","sub","Reset Save (new career)");
+  rb.onclick=()=>{if(confirm("Start a brand new career? This erases current progress.")){localStorage.removeItem(KEY); newWorld(); active="Dashboard"; tableDiv=null; save(); renderAll();}};
+  reset.appendChild(rb); document.getElementById("main").appendChild(reset);
+}
+
+if(!load()) newWorld();
+if(S.userDiv && S.divisions[S.userDiv] && S.divisions[S.userDiv].length!==TEAMS_PER_DIV){
+  localStorage.removeItem(KEY);
+  newWorld();
+}
+if(S.userTeam) enforceSquadCap(S.userTeam);
+if(S.userTeam && !S.objective) setObjective();
+if(S.userTeam && !S.rival) setRival();
+if(typeof S.pendingEvent==="undefined") S.pendingEvent=null;
+if(S.club){
+  if(typeof S.club.medical!=="number") S.club.medical=1;
+  if(typeof S.club.spirit!=="number") S.club.spirit=1;
+}
+if(typeof S.euro==="undefined") S.euro=null;
+if(S.userTeam && !S.cup) cupStartSeason();
+if(typeof S.seasonWages!=="number") S.seasonWages=0;
+if(!S.hallOfFame) S.hallOfFame=[];
+Object.values(S.players).forEach(ros=>ros.forEach(p=>{
+  if(typeof p.careerGoals!=="number") p.careerGoals=0;
+  if(typeof p.careerAssists!=="number") p.careerAssists=0;
+  if(typeof p.careerApps!=="number") p.careerApps=0;
+  delete p.wage;
+}));
+if(typeof S.seasonRevenue!=="number") S.seasonRevenue=0;
+renderAll();
+})();
+</script>
+</body>
+</html>
